@@ -1,0 +1,16 @@
+/.vs
+/External
+/lmfs/x64
+/lmfs/Debug
+lmfs/sfml-audio-3.dll
+lmfs/sfml-audio-d-3.dll
+lmfs/sfml-graphics-3.dll
+lmfs/sfml-graphics-d-3.dll
+lmfs/sfml-network-3.dll
+lmfs/sfml-network-d-3.dll
+lmfs/sfml-system-3.dll
+lmfs/sfml-system-d-3.dll
+lmfs/sfml-window-3.dll
+lmfs/sfml-window-d-3.dll
+x64/Debug/lmfs.exe
+x64/Release/lmfs.exe
