@@ -1,32 +1,37 @@
-﻿#include <SFML/Graphics.hpp>
+﻿#include "Game.h"
 
 int main()
 {
-    // INITIAL SETUP
+    sf::Font font;
+    font.openFromFile("assets\\Retro_Gaming.ttf");
+    Game game;
+    game.run();
+    
+    /*
+    window.setFramerateLimit(framerate);
+
     unsigned int width = 640;
     unsigned int height = 360;
     unsigned int framerate = 60;
-    sf::RenderWindow window(sf::VideoMode({ width, height }), "Window Application");
-    window.setFramerateLimit(framerate);
 
     // CREATE SHAPE
-    sf::CircleShape shape(100.f);
+    sf::RectangleShape shape;
+    shape.setSize(sf::Vector2f(80, 40));
     shape.setOrigin(shape.getGeometricCenter());
     shape.setPosition({width/2.0f, height/2.0f});
     shape.setFillColor(sf::Color::Green);
 
+
     while (window.isOpen())
     {
+        // MAIN LOOP
         while (const std::optional event = window.pollEvent())
         {
             // CLOSING WINDOW
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
-            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
-                    window.close();
-                }
+
             }
         }
 
@@ -35,5 +40,7 @@ int main()
         // DRAW
         window.draw(shape);
         window.display();
-    }
-}
+        
+    }*/
+ }
+
