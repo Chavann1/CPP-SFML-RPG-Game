@@ -30,7 +30,7 @@ void Game::initWindow()
         std::ofstream file(winSet);
         file << "Window\n";
         file << 640 << "\n";
-        file << 360 << "\n";
+        file << 512 << "\n";
         file << 60;
         file.close();
     }
@@ -41,8 +41,8 @@ void Game::initWindow()
     
     // Variables to read values into
     std::string line = "default";
-    unsigned int width = 120;
-    unsigned int height = 60;
+    unsigned int width = 640;
+    unsigned int height = 512;
     unsigned int framerate = 60;
 
     getline(setFile, line);
@@ -60,7 +60,8 @@ void Game::initWindow()
 
 void Game::initStates()
 {
-    states.push(new GameState(window, &this->keyRef));
+    //states.push(new GameState(window, &this->keyRef, 1));
+    states.push(new MainMenuState(window, &this->keyRef, states));
 }
 
 void Game::initKeybinds()
@@ -68,7 +69,7 @@ void Game::initKeybinds()
     fs::path keySet = "config/keybinds.ini";
     if (!std::filesystem::exists(keySet)) {
         std::ofstream file(keySet);
-        file << "UP 22\nDOWN 18\nLEFT 0\nRIGHT 3";
+        file << "UP 22\nDOWN 18\nLEFT 0\nRIGHT 3\nESC 36\nATK 25\nINT 23";
         file.close();
     }
 
@@ -90,7 +91,8 @@ void Game::initKeybinds()
 void Game::update()
 {
     if (!states.empty()) {
-        states.top()->update(delTime);
+        bool end = states.top()->update(delTime);
+        if (end) popState();
         states.top()->inputUpdate(delTime);
     }
 }
@@ -120,6 +122,16 @@ void Game::render()
 
 }
 
+void Game::popState()
+{
+    states.top()->endState();
+    delete states.top();
+    states.pop();
+    if(!states.empty()) {
+        states.top()->start();
+    }
+}
+
 void Game::eventUpdate()
 {
     // MAIN LOOP
@@ -127,6 +139,7 @@ void Game::eventUpdate()
     {
         // Closing window
         if (event->is<sf::Event::Closed>()) {
+            states.top()->endState();
             window->close();
         }
 

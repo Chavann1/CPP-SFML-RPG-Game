@@ -2,6 +2,7 @@
 
 #include "State.h"
 #include "GameState.h"
+#include "MainMenuState.h"
 
 namespace fs = std::filesystem;
 
@@ -26,6 +27,7 @@ public:
 	void update();
 	void run();
 	void render();
+	void popState();
 	void eventUpdate();
 	void clockUpdate();
 };
