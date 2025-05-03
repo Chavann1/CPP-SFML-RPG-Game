@@ -15,6 +15,7 @@
 #include <string>
 #include <regex>
 #include <utility>
+#include <cstdlib>
 //#include "Door.h"
 //#include "Room.h"
 

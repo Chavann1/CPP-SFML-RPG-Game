@@ -29,7 +29,7 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const std
             text->setPosition(position + size / 2.f);
 
             hoverSound = new sf::Sound(hoverBuffer);
-            //clickSound->setBuffer(clickBuffer);
+            clickSound = new sf::Sound(clickBuffer);
         }
 
 void Button::setHovered(bool hovered) {
@@ -52,7 +52,7 @@ bool Button::contains(sf::Vector2f point) const {
 }
 
 std::pair<int, int> Button::onClick() {
-    //clickSound->play();
-    //std::cout << "h" << std::endl;
+    if(clickSound->getStatus() != sf::SoundSource::Status::Playing) clickSound->play();
+
     return std::pair<int, int>(bType, bData);
 }

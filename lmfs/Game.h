@@ -16,6 +16,7 @@ private:
 
 	// Variables
 	sf::RenderWindow *window;
+	sf::View* mainView;
 	sf::Clock clock;
 	float delTime;
 	std::stack<State*> states;
@@ -28,6 +29,7 @@ public:
 	void run();
 	void render();
 	void popState();
+	void close();
 	void eventUpdate();
 	void clockUpdate();
 };

@@ -20,5 +20,8 @@ public:
     void endState();
     void initKeys();
     MenuManager *manager;
+    sf::RectangleShape bgShape;
+    sf::Texture bgTexture;
+    sf::Music music;
 };
 

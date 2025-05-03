@@ -10,7 +10,8 @@ public:
     sf::RectangleShape shape;
     sf::RectangleShape secondaryShape;
     sf::FloatRect collisionBox;
+    int type;
 
-    Door(const sf::Vector2f& pos, float w, float h, int destId, const sf::Vector2f& destPos);
+    Door(const sf::Vector2f& pos, float w, float h, int destId, const sf::Vector2f& destPos, int type);
 };
 

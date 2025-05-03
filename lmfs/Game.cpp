@@ -49,12 +49,20 @@ void Game::initWindow()
     setFile >> width >> height >> framerate;
 
     setFile.close();
-    
-	this->window = new sf::RenderWindow(sf::VideoMode({ width, height }), line);
+    float w, h;
+    w = width;
+    h = height;
+    mainView = new sf::View(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(w, h)));
+
+	window = new sf::RenderWindow(sf::VideoMode({ width, height }), line);
+    window->setView(*mainView);
     window->setFramerateLimit(framerate);
     
     //this->window = new sf::RenderWindow(sf::VideoMode({ 640, 460 }), "line");
     window->setFramerateLimit(60);
+    sf::Image icon;
+    icon.loadFromFile("assets/icon.png");
+    window->setIcon(icon.getSize(), icon.getPixelsPtr());
     
 }
 
@@ -93,12 +101,13 @@ void Game::update()
     if (!states.empty()) {
         bool end = states.top()->update(delTime);
         if (end) popState();
-        states.top()->inputUpdate(delTime);
+        if (!states.empty()) states.top()->inputUpdate(delTime);
     }
 }
 
 void Game::run()
 {
+
     while (window->isOpen())
     {
         clockUpdate();
@@ -124,12 +133,21 @@ void Game::render()
 
 void Game::popState()
 {
-    states.top()->endState();
-    delete states.top();
-    states.pop();
+    // First check if it's not empty
     if(!states.empty()) {
-        states.top()->start();
+        states.top()->endState();
+        delete states.top();
+        states.pop();
+        // Check if it's not empty after deletion
+        if (!states.empty()) states.top()->start();
+        else close();
+    } else {
+        close();
     }
+}
+
+void Game::close() {
+    window->close();
 }
 
 void Game::eventUpdate()
@@ -139,8 +157,7 @@ void Game::eventUpdate()
     {
         // Closing window
         if (event->is<sf::Event::Closed>()) {
-            states.top()->endState();
-            window->close();
+            popState();
         }
 
     }

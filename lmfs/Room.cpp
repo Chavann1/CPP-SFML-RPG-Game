@@ -4,9 +4,10 @@ constexpr int TILE_SIZE = 32;
 constexpr int ROOM_WIDTH = 20;
 constexpr int ROOM_HEIGHT = 16;
 
-Room::Room(const std::string& layoutFile, const std::string& graphicsFile, bool completed) {
+Room::Room(const std::string& layoutFile, const std::string& graphicsFile, bool completed) : completed(completed) {
     loadLayout(layoutFile, completed);
     loadGraphics(graphicsFile);
+    srand(time(0));
 }
 
 Room::~Room()
@@ -41,16 +42,35 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
             }
         }
     }     
+
     // Load doors
     while (std::getline(file, line)) {
         if (line == "enemies") break;
         std::istringstream iss(line);
         float x, y, w, h, destX, destY;
-        int destRoom;
-        if (iss >> x >> y >> w >> h >> destRoom >> destX >> destY) {
-        doors.push_back(new Door(sf::Vector2f(x, y), w, h, destRoom, sf::Vector2f(destX, destY)));
-        if (completed) doors.back()->open = true;
-        else doors.back()->open = false;
+        int destRoom, type;
+        if (iss >> x >> y >> w >> h >> destRoom >> destX >> destY >> type) {
+            doors.push_back(new Door(sf::Vector2f(x, y), w, h, destRoom, sf::Vector2f(destX, destY), type));
+            if (completed || type == -1) doors.back()->open = true;
+            else doors.back()->open = false;
+        }
+    }
+
+    // Load enemies
+    if (!completed) {
+        eManager = new EnemyManager(collisionRects);
+        while (std::getline(file, line)) {
+            if (line == "end") break;
+            std::istringstream iss(line);
+            float x, y;
+            int type, dropId, dropCount;
+            bool priority;
+            if (iss >> x >> y >> type >> priority >> dropId >> dropCount) {
+                eManager->enemies.push_back(new Enemy(sf::Vector2f(x, y), type, dropId, dropCount, priority));
+                //doors.push_back(new Door(sf::Vector2f(x, y), w, h, destRoom, sf::Vector2f(destX, destY)));
+                //if (completed) doors.back()->open = true;
+                //else doors.back()->open = false;
+            }
         }
     }
     
@@ -142,9 +162,32 @@ void Room::render(sf::RenderWindow& window) const {
     for (const auto& door : doors) {
         window.draw(door->shape);
     }
+    if (eManager != nullptr) eManager->render(window);
+}
+
+bool Room::update(const float& delTime) const
+{
+    if(eManager != nullptr) eManager->update(delTime);
+    return completed;
+}
+
+void Room::complete()
+{
+    completed = true;
+    for (auto p : doors) {
+        if (p->type == 0) {
+            p->open = true;
+        }
+        else continue;
+    }
 }
 
 const std::vector<sf::FloatRect*>& Room::getCollisionRects() const {
     return collisionRects;
+}
+
+EnemyManager* Room::getEManager()
+{
+    return eManager;
 }
 

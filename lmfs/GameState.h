@@ -35,6 +35,7 @@ public:
 	void loadSave(int save);
 	virtual void inputUpdate(const float& delTime);
 	MenuManager* manager;
+	sf::Music music;
 
 };
 

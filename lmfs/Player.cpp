@@ -1,15 +1,47 @@
 #include "Player.h"
 
 Player::Player(float x, float y, int h, int m) {
-    shape.setSize(sf::Vector2f(20.f, 24.f));
-    shape.setOrigin(sf::Vector2f(0.f, 0.f));
-    shape.setPosition(sf::Vector2f(x, y));
-    shape.setFillColor(sf::Color::Green);
     speed = 100.f;
     hp = h;
     money = m;
+    pState = idle;
+    frame = 1;
+    dir = 0;
+    runAnimClock.restart();
+
+    // Load sprite
+    std::string textureFilename = "player_run.png";
+
+    if (!texture.loadFromFile("assets/" + textureFilename)) {
+        std::cerr << "Failed to load texture: " << textureFilename << std::endl;
+        return;
+    }
+
+    shape.setOrigin(sf::Vector2f(0.f, 0.f));
+    shape.setPosition(sf::Vector2f(x, y));
+    shape.setTexture(&texture);
+    shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(19, 27)));
+    //shape.setSize(sf::Vector2f(38.f, 54.f));
+    shape.setSize(sf::Vector2f(38.f, 54.f));
+
+    hitbox.setOrigin(sf::Vector2f(0.f, 0.f));
+    hitbox.setPosition(sf::Vector2f(x+8, y+16));
+    hitbox.setSize(sf::Vector2f(24.f, 34.f));
 }
-Door* Player::movement(sf::Vector2f movement, float delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors) {
+void Player::update()
+{
+    sf::FloatRect rect = shape.getGlobalBounds();
+    sf::FloatRect eRect;
+    if (eManager != nullptr) {
+        for (auto p : eManager->enemies) {
+            eRect = p->shape.getGlobalBounds();
+            if (rect.findIntersection(eRect)) {
+                std::cout << "ecollision";
+            }
+        }
+    }
+}
+Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors) {
     if (movement.x != 0 && movement.y != 0) {
         movement *= 0.7071f;
     }
@@ -17,11 +49,11 @@ Door* Player::movement(sf::Vector2f movement, float delTime, std::vector<sf::Flo
     //sf::Vector2f oldPos = shape.getPosition();
     
     // Test Copy
-    sf::RectangleShape newS = shape;
+    sf::RectangleShape newS = hitbox;
     newS.move(movement * speed * delTime);
 
     // Player bounds shape
-    sf::FloatRect oldRect = shape.getGlobalBounds();
+    sf::FloatRect oldRect = hitbox.getGlobalBounds();
     float olLeft = oldRect.position.x;
     float olRight = olLeft + oldRect.size.x;
     float olUp = oldRect.position.y;
@@ -73,8 +105,29 @@ Door* Player::movement(sf::Vector2f movement, float delTime, std::vector<sf::Flo
         }
         else continue;
     }
+    if (movement.x == 0 && movement.y == 0) {
+        pState = idle;
+    }
+    else {
+        pState = walking;
+    }
     shape.move(movement * speed * delTime);
+    hitbox.setPosition(shape.getPosition() + sf::Vector2f(8.f, 16.f));
     return nullptr;
+}
+
+void Player::animate()
+{
+    if(pState == idle) shape.setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
+    else {
+        if (runAnimClock.getElapsedTime() >= sf::milliseconds(200)) {
+            frame++;
+            if (frame > 4) frame = 1;
+            runAnimClock.restart();
+        }
+        shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+    }
+
 }
 
 void Player::teleport(sf::Vector2f pos)

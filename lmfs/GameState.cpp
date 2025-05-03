@@ -14,10 +14,11 @@ void GameState::initKeys()
 GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, int save, std::stack<State*>& states) : State(newWin, keyNew), states(states)
 {
 	initKeys();
+	initSounds();
 	loadSave(save);
 	player = new Player(pX, pY, pHp, pM);
 	//room = new Room("data/rooms/room1.txt", "data/rooms/roomtext1.txt");
-	loadRoom(1, sf::Vector2f(80, 80));
+	loadRoom(roomId, sf::Vector2f(pX, pY));
 	manager = new MenuManager();
 }
 
@@ -28,6 +29,7 @@ GameState::~GameState()
 
 void GameState::loadRoom(int id, sf::Vector2f playerPos)
 {
+	roomId = id;
 	std::string name1, name2;
 	name1 = "data/rooms/room" + std::to_string(id) + ".txt";
 	name2 = "data/rooms/roomtext" + std::to_string(id) + ".txt";
@@ -38,6 +40,7 @@ void GameState::loadRoom(int id, sf::Vector2f playerPos)
 	if (room != nullptr) delete room;
 	room = new Room(name1, name2, completed);
 	player->teleport(playerPos);
+	player->eManager = room->getEManager();
 }
 
 void GameState::endState()
@@ -46,6 +49,7 @@ void GameState::endState()
 
 bool GameState::update(const float& delTime)
 {
+	if (music.getStatus() != sf::SoundSource::Status::Playing) music.play();
 	if (paused) {
 		std::pair<int, int> data = manager->update(delTime, *window);
 		switch (data.first) {
@@ -54,6 +58,12 @@ bool GameState::update(const float& delTime)
 			break;
 		}
 	}
+	else {
+		if (room->update(delTime)) {
+			completion[roomId] = true;
+		}
+	}
+	player->update();
 	return false;
 }
 
@@ -72,17 +82,25 @@ void GameState::start()
 
 void GameState::initSounds()
 {
-	if (!this->hoverBuffer.loadFromFile("assets/button.mp3"))
+	if (!hoverBuffer.loadFromFile("assets/button.wav"))
 	{
 		std::cout << ("Could not load sound");
 	}
-	clickBuffer.loadFromFile("assets/clicked.mp3");
+	if (!clickBuffer.loadFromFile("assets/clicked.wav"))
+	{
+		std::cout << ("Could not load sound");
+	}
+
+	if (!music.openFromFile("assets/level_1.wav")) std::cout << "Could not load level music";
+	music.setLooping(true);
+	music.play();
 }
 
 void GameState::render(sf::RenderTarget* target)
 {
 	room->render(*window);
 	window->draw(player->shape);
+	player->animate();
 	if(!manager->menus.empty()) manager->render(*window);
 }
 
@@ -112,35 +130,47 @@ void GameState::inputUpdate(const float& delTime)
 		if (!paused) {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
 				manager->menus.push(new Menu());
-				manager->menus.top()->addButton(Button({ 100, 100 }, { 200, 50 }, "Exit", 0, 0, font, hoverBuffer, clickBuffer));
+				manager->menus.top()->addButton(Button({ 250, 100 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
+				
 				paused = true;
 				start();
 			}
-		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
-			while(!(manager->menus.empty())) {
-				delete manager->menus.top();
-				manager->menus.pop();
+			// PLAYER CONTROLS
+			sf::Vector2f vec;
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["UP"]))) {
+				vec.y = -1;
+				player->dir = 2;
 			}
-			paused = false;
-			start();
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["DOWN"]))) {
+				vec.y = 1;
+				player->dir = 0;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["LEFT"]))) {
+				vec.x = -1;
+				player->dir = 3;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["RIGHT"]))) {
+				vec.x = 1;
+				player->dir = 1;
+			}
+			curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors);
+			if (curDoor != nullptr) {
+				loadRoom(curDoor->destinationRoomId, curDoor->destinationPosition);
+			}
+			// PLAYER ATTACK
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ATK"]))) {
+				//player->attack();
+			}
 		}
-		sf::Vector2f vec;
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["UP"]))) {
-			vec.y = -1;
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["DOWN"]))) {
-			vec.y = 1;
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["LEFT"]))) {
-			vec.x = -1;
-		}
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["RIGHT"]))) {
-			vec.x = 1;
-		}
-		curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors);
-		if (curDoor != nullptr) {
-			loadRoom(curDoor->destinationRoomId, curDoor->destinationPosition);
+		else {
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
+				while (!(manager->menus.empty())) {
+					delete manager->menus.top();
+					manager->menus.pop();
+				}
+				paused = false;
+				start();
+			}
 		}
 	}
 	else {

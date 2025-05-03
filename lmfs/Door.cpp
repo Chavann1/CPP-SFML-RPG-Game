@@ -1,6 +1,6 @@
 #include "Door.h"
 
-Door::Door(const sf::Vector2f& pos, float w, float h, int destId, const sf::Vector2f& destPos)
+Door::Door(const sf::Vector2f& pos, float w, float h, int destId, const sf::Vector2f& destPos, int type): type(type)
 {
 	collisionBox.position = pos;
 	collisionBox.size = sf::Vector2f(w, h);
