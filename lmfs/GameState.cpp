@@ -14,12 +14,37 @@ void GameState::initKeys()
 GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, int save, std::stack<State*>& states) : State(newWin, keyNew), states(states)
 {
 	initKeys();
+	initFonts();
 	initSounds();
 	loadSave(save);
-	player = new Player(pX, pY, pHp, pM);
+	player = new Player(pX, pY, pHp, pM, 10.f);
+	player->hurtSound = new sf::Sound(hurtBuffer);
 	//room = new Room("data/rooms/room1.txt", "data/rooms/roomtext1.txt");
 	loadRoom(roomId, sf::Vector2f(pX, pY));
 	manager = new MenuManager();
+
+	hud = new Hud(10.f, pM, font);
+	player->hud = hud;
+
+	float wid, hei;
+	wid = window->getSize().x;
+	hei = window->getSize().y;
+	pauseBg.setSize(sf::Vector2f(wid, hei));
+	pauseBg.setFillColor(sf::Color(0, 0, 0, 128));
+	pauseBg.setOrigin(sf::Vector2f(0, 0));
+	pauseBg.setPosition(sf::Vector2f(0, 0));
+
+	std::string textureFilename = "game_over.png";
+	if (!gameOverTexture.loadFromFile("assets/" + textureFilename)) {
+		std::cerr << "Failed to load texture: " << textureFilename << std::endl;
+		return;
+	}
+
+	gameOverShape.setTexture(&gameOverTexture);
+	gameOverShape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(182, 37)));
+	//gameOverShape.setSize(newWin->getView().getSize());
+	gameOverShape.setSize(sf::Vector2f(364.f, 74.f));
+	gameOverShape.setPosition(sf::Vector2f(160.f, 50.f));
 }
 
 GameState::~GameState()
@@ -29,6 +54,8 @@ GameState::~GameState()
 
 void GameState::loadRoom(int id, sf::Vector2f playerPos)
 {
+	player->teleport(playerPos);
+	//player->pState = Player::wait;
 	roomId = id;
 	std::string name1, name2;
 	name1 = "data/rooms/room" + std::to_string(id) + ".txt";
@@ -39,7 +66,6 @@ void GameState::loadRoom(int id, sf::Vector2f playerPos)
 	}
 	if (room != nullptr) delete room;
 	room = new Room(name1, name2, completed);
-	player->teleport(playerPos);
 	player->eManager = room->getEManager();
 }
 
@@ -49,8 +75,22 @@ void GameState::endState()
 
 bool GameState::update(const float& delTime)
 {
-	if (music.getStatus() != sf::SoundSource::Status::Playing) music.play();
-	if (paused) {
+	if (gState != over) {
+		if (music.getStatus() != sf::SoundSource::Status::Playing) music.play();
+	}
+	if (gState == paused) {
+		std::pair<int, int> data = manager->update(delTime, *window);
+		switch (data.first) {
+		case 0:
+			return true;
+			break;
+		}
+	} else if (gState == active) {
+		player->update();
+		if (room->update(delTime)) {
+			completion[roomId] = true;
+		}
+	} else {
 		std::pair<int, int> data = manager->update(delTime, *window);
 		switch (data.first) {
 		case 0:
@@ -58,12 +98,18 @@ bool GameState::update(const float& delTime)
 			break;
 		}
 	}
-	else {
-		if (room->update(delTime)) {
-			completion[roomId] = true;
+	if (player->pState == Player::dead && player->frame >= 3) {
+		if (gState != over) {
+			gState = over;
+			music.stop();
+			if(!music.openFromFile("assets/game_over.wav")) std::cout << "Could not load game over music";
+			music.setLooping(true);
+			music.play();
+			manager->menus.push(new Menu());
+			manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Restart", 0, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 220, 300 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
 		}
 	}
-	player->update();
 	return false;
 }
 
@@ -90,6 +136,10 @@ void GameState::initSounds()
 	{
 		std::cout << ("Could not load sound");
 	}
+	if (!hurtBuffer.loadFromFile("assets/player_hurt.wav"))
+	{
+		std::cout << ("Could not load sound");
+	}
 
 	if (!music.openFromFile("assets/level_1.wav")) std::cout << "Could not load level music";
 	music.setLooping(true);
@@ -98,10 +148,19 @@ void GameState::initSounds()
 
 void GameState::render(sf::RenderTarget* target)
 {
+	
 	room->render(*window);
-	window->draw(player->shape);
+	// remove * if reverted
+	window->draw(*(player->shape));
 	player->animate();
+	if (gState == paused || gState == over) {
+		window->draw(pauseBg);
+	}
+	if (gState == over) {
+		window->draw(gameOverShape);
+	}
 	if(!manager->menus.empty()) manager->render(*window);
+	hud->draw(*window);
 }
 
 void GameState::loadSave(int save)
@@ -127,48 +186,53 @@ void GameState::loadSave(int save)
 void GameState::inputUpdate(const float& delTime)
 {
 	if (startTimer < 0) {
-		if (!paused) {
+		if (gState == active) {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
 				manager->menus.push(new Menu());
-				manager->menus.top()->addButton(Button({ 250, 100 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
+				manager->menus.top()->addButton(Button({ 220, 100 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
+				manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Save", 0, 0, font, hoverBuffer, clickBuffer));
 				
-				paused = true;
+				//paused = true;
+				gState = paused;
 				start();
 			}
 			// PLAYER CONTROLS
-			sf::Vector2f vec;
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["UP"]))) {
-				vec.y = -1;
-				player->dir = 2;
-			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["DOWN"]))) {
-				vec.y = 1;
-				player->dir = 0;
-			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["LEFT"]))) {
-				vec.x = -1;
-				player->dir = 3;
-			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["RIGHT"]))) {
-				vec.x = 1;
-				player->dir = 1;
-			}
-			curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors);
-			if (curDoor != nullptr) {
-				loadRoom(curDoor->destinationRoomId, curDoor->destinationPosition);
-			}
-			// PLAYER ATTACK
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ATK"]))) {
-				//player->attack();
+			if (player->pState != Player::dead) {
+				sf::Vector2f vec;
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["UP"]))) {
+					vec.y = -1;
+					player->dir = 2;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["DOWN"]))) {
+					vec.y = 1;
+					player->dir = 0;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["LEFT"]))) {
+					vec.x = -1;
+					player->dir = 3;
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["RIGHT"]))) {
+					vec.x = 1;
+					player->dir = 1;
+				}
+				curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors);
+				if (curDoor != nullptr) {
+					loadRoom(curDoor->destinationRoomId, curDoor->destinationPosition);
+				}
+				// PLAYER ATTACK
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ATK"]))) {
+					player->attack();
+				}
 			}
 		}
-		else {
+		else if(gState == paused){
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
 				while (!(manager->menus.empty())) {
 					delete manager->menus.top();
 					manager->menus.pop();
 				}
-				paused = false;
+				//paused = false;
+				gState = active;
 				start();
 			}
 		}

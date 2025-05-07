@@ -31,6 +31,9 @@ void Enemy::loadSprite()
         shape.setSize(sf::Vector2f(40.f, 42.f));
         hp = 2.f;
         speed = 50.f;
+        damage = 1;
+
+        hitbox.setSize(sf::Vector2f(30.f, 28.f));
         break;
     }
 
@@ -137,6 +140,7 @@ void Enemy::movement(const float& delTime, std::vector<sf::FloatRect*> collision
             }
             if (move.x != 0 && move.y != 0) stuck = false;
             shape.move(move * speed * delTime);
+            hitbox.setPosition(shape.getPosition() + sf::Vector2f(6.f, 12.f));
         }
 }
 

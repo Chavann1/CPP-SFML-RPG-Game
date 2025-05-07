@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "Door.h"
 #include "Room.h"
+#include "Hud.h"
 #include "MenuManager.h"
 
 class GameState : public State
@@ -15,11 +16,13 @@ private:
 	Door* curDoor;
 	float pHp, pM;
 	int pX, pY;
-	bool paused = false;
+	enum Game_State { active, paused, over };
+	Game_State gState;
+	//bool paused = false;
 public:
 	std::stack<State*>& states;
 	sf::Font font;
-	sf::SoundBuffer hoverBuffer, clickBuffer;
+	sf::SoundBuffer hoverBuffer, clickBuffer, hurtBuffer;
 	std::map<int, bool> completion;
 	int roomId = 1;
 	GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, int save, std::stack<State*>& states);
@@ -34,8 +37,12 @@ public:
 	void render(sf::RenderTarget* target);
 	void loadSave(int save);
 	virtual void inputUpdate(const float& delTime);
+	sf::Texture gameOverTexture;
+	sf::RectangleShape pauseBg;
+	sf::RectangleShape gameOverShape;
 	MenuManager* manager;
 	sf::Music music;
-
+	sf::Music gameOverMusic;
+	Hud* hud;
 };
 

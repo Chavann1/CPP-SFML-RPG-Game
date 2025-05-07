@@ -161,6 +161,7 @@
     <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameState.cpp" />
+    <ClCompile Include="Hud.cpp" />
     <ClCompile Include="lmfs.cpp" />
     <ClCompile Include="MainMenuState.cpp" />
     <ClCompile Include="Menu.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
+    <ClInclude Include="Hud.h" />
     <ClInclude Include="MainMenuState.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="MenuManager.h" />

@@ -1,13 +1,14 @@
 #include "EnemyManager.h"
 
-void EnemyManager::update(const float& delTime)
+bool EnemyManager::update(const float& delTime)
 {
 	if (enemies.size() > 0) {
 		for (auto p : enemies) {
 			p->movement(delTime, collisionRects);
 			p->animate();
 		}
-	}
+	} else return true;
+	return false;
 }
 
 void EnemyManager::render(sf::RenderWindow& window)

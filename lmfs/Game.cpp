@@ -57,7 +57,6 @@ void Game::initWindow()
 	window = new sf::RenderWindow(sf::VideoMode({ width, height }), line);
     window->setView(*mainView);
     window->setFramerateLimit(framerate);
-    
     //this->window = new sf::RenderWindow(sf::VideoMode({ 640, 460 }), "line");
     window->setFramerateLimit(60);
     sf::Image icon;

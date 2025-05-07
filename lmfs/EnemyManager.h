@@ -8,7 +8,7 @@ public:
 	std::vector<Enemy*> enemies;
 	std::vector<sf::FloatRect*>& collisionRects;
 
-	void update(const float& delTime);
+	bool update(const float& delTime);
 	void render(sf::RenderWindow& window);
 };
 

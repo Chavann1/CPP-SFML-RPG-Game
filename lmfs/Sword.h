@@ -1,8 +1,11 @@
 #pragma once
 #include "State.h"
-#include "Enemy.h"
+#include "EnemyManager.h"
 
 class Sword
 {
+	//sf::Clock lifetimeClock;
+	EnemyManager* eManager;
+	Sword(EnemyManager* eManager);
 };
 

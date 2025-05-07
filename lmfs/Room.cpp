@@ -165,9 +165,13 @@ void Room::render(sf::RenderWindow& window) const {
     if (eManager != nullptr) eManager->render(window);
 }
 
-bool Room::update(const float& delTime) const
+bool Room::update(const float& delTime)
 {
-    if(eManager != nullptr) eManager->update(delTime);
+    if (eManager != nullptr) {
+        if (eManager->update(delTime)) {
+            complete();
+        }
+    }
     return completed;
 }
 

@@ -1,13 +1,16 @@
 #include "Player.h"
 
-Player::Player(float x, float y, int h, int m) {
+Player::Player(float x, float y, int h, float m, float max) {
     speed = 100.f;
     hp = h;
     money = m;
     pState = idle;
     frame = 1;
     dir = 0;
+    max_hp = max;
     runAnimClock.restart();
+    
+    damageable = true;
 
     // Load sprite
     std::string textureFilename = "player_run.png";
@@ -17,12 +20,26 @@ Player::Player(float x, float y, int h, int m) {
         return;
     }
 
+    textureFilename = "player_death.png";
+
+    if (!dTexture.loadFromFile("assets/" + textureFilename)) {
+        std::cerr << "Failed to load texture: " << textureFilename << std::endl;
+        return;
+    }
+
+    shape = new sf::Sprite(texture);
+    /*
     shape.setOrigin(sf::Vector2f(0.f, 0.f));
     shape.setPosition(sf::Vector2f(x, y));
-    shape.setTexture(&texture);
+    //shape.setTexture(&texture); changed
     shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(19, 27)));
-    //shape.setSize(sf::Vector2f(38.f, 54.f));
-    shape.setSize(sf::Vector2f(38.f, 54.f));
+    //shape.setSize(sf::Vector2f(38.f, 54.f)); changed
+    shape.setScale(sf::Vector2f(2.f, 2.f));
+    */
+    shape->setOrigin(sf::Vector2f(0.f, 0.f));
+    shape->setPosition(sf::Vector2f(x, y));
+    shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(19, 27)));
+    shape->setScale(sf::Vector2f(2.f, 2.f));
 
     hitbox.setOrigin(sf::Vector2f(0.f, 0.f));
     hitbox.setPosition(sf::Vector2f(x+8, y+16));
@@ -30,13 +47,46 @@ Player::Player(float x, float y, int h, int m) {
 }
 void Player::update()
 {
-    sf::FloatRect rect = shape.getGlobalBounds();
+    if (pState == attacking) {
+        if (attackClock.getElapsedTime() >= sf::milliseconds(400)) {
+            pState = walking;
+        }
+    }
+    //sf::FloatRect rect = shape.getGlobalBounds();
+    sf::FloatRect rect = shape->getGlobalBounds();
     sf::FloatRect eRect;
-    if (eManager != nullptr) {
-        for (auto p : eManager->enemies) {
-            eRect = p->shape.getGlobalBounds();
-            if (rect.findIntersection(eRect)) {
-                std::cout << "ecollision";
+    
+    if (damageable) {
+        if (eManager != nullptr) {
+            for (auto p : eManager->enemies) {
+                eRect = p->hitbox.getGlobalBounds();
+                if (rect.findIntersection(eRect)) {
+                    damageable = false;
+                    shape->setColor(sf::Color(255, 255, 255, 128));
+                    hurtSound->play();
+                    hp -= p->damage;
+                    // Update HUD
+                    hud->updateHp(hp, max_hp);
+                    if (hp <= 0) {
+                        shape->setColor(sf::Color(255, 255, 255, 255));
+                        pState = dead;
+                        //shape.setTexture(&dTexture);
+                        shape->setTexture(dTexture);
+                        //shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
+                        shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
+                        //shape.setSize(sf::Vector2f(48.f, 48.f));
+                        runAnimClock.restart();
+                        frame = 0;
+                    }
+                    damageClock.restart();
+                }
+            }
+        }
+    } else {
+        if (pState != dead) {
+            if (damageClock.getElapsedTime() >= sf::seconds(0.75f)) {
+                damageable = true;
+                shape->setColor(sf::Color(255, 255, 255, 255));
             }
         }
     }
@@ -105,32 +155,56 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
         }
         else continue;
     }
-    if (movement.x == 0 && movement.y == 0) {
-        pState = idle;
+
+    if (pState == Player::idle || pState == Player::walking) {
+        if (movement.x == 0 && movement.y == 0) {
+            pState = idle;
+        }
+        else {
+            pState = walking;
+        }
+        //shape.move(movement * speed * delTime);
+
+        shape->move(movement * speed * delTime);
+        //hitbox.setPosition(shape.getPosition() + sf::Vector2f(8.f, 16.f));
+        hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
     }
-    else {
-        pState = walking;
-    }
-    shape.move(movement * speed * delTime);
-    hitbox.setPosition(shape.getPosition() + sf::Vector2f(8.f, 16.f));
     return nullptr;
 }
 
 void Player::animate()
 {
-    if(pState == idle) shape.setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
-    else {
+    //if(pState == idle) shape.setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
+    if (pState == idle) shape->setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
+    else if(pState == walking) {
         if (runAnimClock.getElapsedTime() >= sf::milliseconds(200)) {
             frame++;
             if (frame > 4) frame = 1;
             runAnimClock.restart();
         }
-        shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+        //shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+        shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+    } else if (pState == dead) {
+        if (runAnimClock.getElapsedTime() >= sf::milliseconds(300)) {
+            if(frame < 3) frame++;
+            runAnimClock.restart();
+        }
+        //shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 24, 0), sf::Vector2i(24, 24)));
+        shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 24, 0), sf::Vector2i(24, 24)));
     }
 
 }
 
 void Player::teleport(sf::Vector2f pos)
 {
-    shape.setPosition(pos);
+    //shape.setPosition(pos);
+    shape->setPosition(pos);
+    hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
+}
+
+void Player::attack() {
+    if (pState != dead && pState != attacking) {
+        pState = attacking;
+        attackClock.restart();
+    }
 }

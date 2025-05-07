@@ -10,7 +10,7 @@ public:
     ~Room();
     bool completed;
     void render(sf::RenderWindow& window) const;
-    bool update(const float& delTime) const;
+    bool update(const float& delTime);
     void complete();
     const std::vector<sf::FloatRect*>& getCollisionRects() const;
     EnemyManager* getEManager();
