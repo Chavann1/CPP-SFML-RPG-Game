@@ -1,5 +1,8 @@
 #include "EnemyManager.h"
 
+EnemyManager::EnemyManager(std::vector<sf::FloatRect*>& collisionRects) : collisionRects(collisionRects) {
+}
+
 bool EnemyManager::update(const float& delTime)
 {
 	if (enemies.size() > 0) {
@@ -18,7 +21,4 @@ void EnemyManager::render(sf::RenderWindow& window)
 			window.draw(p->shape);
 		}
 	}
-}
-
-EnemyManager::EnemyManager(std::vector<sf::FloatRect*>& collisionRects): collisionRects(collisionRects) {
 }

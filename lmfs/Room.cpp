@@ -67,9 +67,6 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
             bool priority;
             if (iss >> x >> y >> type >> priority >> dropId >> dropCount) {
                 eManager->enemies.push_back(new Enemy(sf::Vector2f(x, y), type, dropId, dropCount, priority));
-                //doors.push_back(new Door(sf::Vector2f(x, y), w, h, destRoom, sf::Vector2f(destX, destY)));
-                //if (completed) doors.back()->open = true;
-                //else doors.back()->open = false;
             }
         }
     }

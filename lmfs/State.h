@@ -16,9 +16,6 @@
 #include <regex>
 #include <utility>
 #include <cstdlib>
-//#include "Door.h"
-//#include "Room.h"
-
 
 class State
 {
@@ -30,6 +27,7 @@ protected:
 	float startTimer;
 
 public:
+	// Virtual functions
 	State(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew);
 	virtual ~State();
 	virtual void initKeys() = 0;
@@ -37,9 +35,12 @@ public:
 	virtual void endState() = 0;
 	virtual void initFonts() = 0;
 	virtual void initSounds() = 0;
-	virtual bool update(const float& delTime)=0;
+	virtual bool update(const float& delTime) = 0;
 	virtual void inputUpdate(const float& delTime) = 0;
-	virtual void render(sf::RenderTarget* target = nullptr)=0;
+	virtual void render(sf::RenderTarget* target = nullptr) = 0;
+
+	// Static functions
+	static void loadTextureImage(sf::Texture& texture, std::string filename);
 
 };
 

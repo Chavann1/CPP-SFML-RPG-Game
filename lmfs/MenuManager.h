@@ -2,16 +2,17 @@
 
 #include "State.h"
 #include "Menu.h"
-//#include "GameState.h"
 
 class MenuManager
 {
 public:
+	// Variables
 	std::stack<Menu*> menus;
-	MenuManager(/*std::stack<State*>& states*/);
-	~MenuManager();
 	std::pair<int, int> update(const float& delTime, sf::RenderWindow& win);
+
+	// Methods
+	MenuManager();
+	~MenuManager();
 	void render(sf::RenderWindow& win);
-	//std::stack<State*>& states;
 };
 

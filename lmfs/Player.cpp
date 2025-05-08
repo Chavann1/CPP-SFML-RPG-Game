@@ -1,5 +1,6 @@
 #include "Player.h"
 
+// CO/DE -STRUCTORS
 Player::Player(float x, float y, int h, float m, float max) {
     speed = 100.f;
     hp = h;
@@ -9,40 +10,40 @@ Player::Player(float x, float y, int h, float m, float max) {
     dir = 0;
     max_hp = max;
     runAnimClock.restart();
-    
+
     damageable = true;
 
     // Load sprite
+    State::loadTextureImage(texture, "player_run");
+    /*
     std::string textureFilename = "player_run.png";
 
     if (!texture.loadFromFile("assets/" + textureFilename)) {
         std::cerr << "Failed to load texture: " << textureFilename << std::endl;
         return;
     }
+    */
 
+    State::loadTextureImage(dTexture, "player_death");
+    /*
     textureFilename = "player_death.png";
 
     if (!dTexture.loadFromFile("assets/" + textureFilename)) {
         std::cerr << "Failed to load texture: " << textureFilename << std::endl;
         return;
     }
-
-    shape = new sf::Sprite(texture);
-    /*
-    shape.setOrigin(sf::Vector2f(0.f, 0.f));
-    shape.setPosition(sf::Vector2f(x, y));
-    //shape.setTexture(&texture); changed
-    shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(19, 27)));
-    //shape.setSize(sf::Vector2f(38.f, 54.f)); changed
-    shape.setScale(sf::Vector2f(2.f, 2.f));
     */
+
+    // Create player sprite
+    shape = new sf::Sprite(texture);
     shape->setOrigin(sf::Vector2f(0.f, 0.f));
     shape->setPosition(sf::Vector2f(x, y));
     shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(19, 27)));
     shape->setScale(sf::Vector2f(2.f, 2.f));
 
+    // Create player hitbox
     hitbox.setOrigin(sf::Vector2f(0.f, 0.f));
-    hitbox.setPosition(sf::Vector2f(x+8, y+16));
+    hitbox.setPosition(sf::Vector2f(x + 8, y + 16));
     hitbox.setSize(sf::Vector2f(24.f, 34.f));
 }
 void Player::update()
@@ -52,29 +53,30 @@ void Player::update()
             pState = walking;
         }
     }
-    //sf::FloatRect rect = shape.getGlobalBounds();
+
+    // Check collisions with enemies
     sf::FloatRect rect = shape->getGlobalBounds();
     sf::FloatRect eRect;
-    
+
     if (damageable) {
         if (eManager != nullptr) {
             for (auto p : eManager->enemies) {
+                // Look for intersection with enemy
                 eRect = p->hitbox.getGlobalBounds();
                 if (rect.findIntersection(eRect)) {
                     damageable = false;
                     shape->setColor(sf::Color(255, 255, 255, 128));
                     hurtSound->play();
                     hp -= p->damage;
+
                     // Update HUD
                     hud->updateHp(hp, max_hp);
                     if (hp <= 0) {
+                        // Initialize Game Over
                         shape->setColor(sf::Color(255, 255, 255, 255));
                         pState = dead;
-                        //shape.setTexture(&dTexture);
                         shape->setTexture(dTexture);
-                        //shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
                         shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
-                        //shape.setSize(sf::Vector2f(48.f, 48.f));
                         runAnimClock.restart();
                         frame = 0;
                     }
@@ -82,8 +84,10 @@ void Player::update()
                 }
             }
         }
-    } else {
+    }
+    else {
         if (pState != dead) {
+            // End invincibility frames
             if (damageClock.getElapsedTime() >= sf::seconds(0.75f)) {
                 damageable = true;
                 shape->setColor(sf::Color(255, 255, 255, 255));
@@ -92,15 +96,10 @@ void Player::update()
     }
 }
 Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors) {
+    // Adjust movement for diagonal directions
     if (movement.x != 0 && movement.y != 0) {
         movement *= 0.7071f;
     }
-
-    //sf::Vector2f oldPos = shape.getPosition();
-    
-    // Test Copy
-    sf::RectangleShape newS = hitbox;
-    newS.move(movement * speed * delTime);
 
     // Player bounds shape
     sf::FloatRect oldRect = hitbox.getGlobalBounds();
@@ -109,6 +108,9 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
     float olUp = oldRect.position.y;
     float olDown = olUp + oldRect.size.y;
 
+    // Copy of player hitbox for testing collisions
+    sf::RectangleShape newS = hitbox;
+    newS.move(movement * speed * delTime);
     sf::FloatRect rect = newS.getGlobalBounds();
     float pLeft = rect.position.x;
     float pRight = pLeft + rect.size.x;
@@ -119,6 +121,7 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
     for (auto p : collisionRects) {
         // Check if it's colliding at all
         if (rect.findIntersection(*p)) {
+            // If it's colliding check exact collisions
             sf::FloatRect wall = *p;
             float wLeft = wall.position.x;
             float wRight = wLeft + wall.size.x;
@@ -127,22 +130,18 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
             // Check if it's to the right
             if (pLeft < wLeft && pRight < wRight && pUp < wDown && pDown > wUp) {
                 movement.x = 0.f;
-                //shape.setPosition(sf::Vector2f(wLeft - rect.size.x, rect2.position.y));
             }
             // Check if it's to the left
             if (pLeft > wLeft && pRight > wRight && pUp < wDown && pDown > wUp) {
                 movement.x = 0.f;
-                //shape.setPosition(sf::Vector2f(wRight, rect2.position.y));
             }
             // Check if it's on the bottom
             if (pUp < wUp && pDown < wDown && pLeft < wRight && pRight > wLeft) {
                 movement.y = 0.f;
-                //shape.setPosition(sf::Vector2f(rect2.position.x, wUp- rect.size.y));
             }
             // Check if it's on the top
             if (pUp > wUp && pDown > wDown && pLeft < wRight && pRight > wLeft) {
                 movement.y = 0.f;
-                //shape.setPosition(sf::Vector2f(rect2.position.x, wDown));
             }
         }
     }
@@ -150,12 +149,14 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
     for (auto p : doors) {
         if (p->open) {
             if (rect.findIntersection(p->collisionBox)) {
+                // If we are colliding with a door return the door
                 return p;
             }
         }
         else continue;
     }
 
+    // Change states for animation purposes
     if (pState == Player::idle || pState == Player::walking) {
         if (movement.x == 0 && movement.y == 0) {
             pState = idle;
@@ -163,10 +164,9 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
         else {
             pState = walking;
         }
-        //shape.move(movement * speed * delTime);
 
+        // Apply  the movement
         shape->move(movement * speed * delTime);
-        //hitbox.setPosition(shape.getPosition() + sf::Vector2f(8.f, 16.f));
         hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
     }
     return nullptr;
@@ -174,22 +174,23 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
 
 void Player::animate()
 {
-    //if(pState == idle) shape.setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
+    // Set position of rectangle on tilesheet
     if (pState == idle) shape->setTextureRect(sf::IntRect(sf::Vector2i(0, dir * 27), sf::Vector2i(19, 27)));
-    else if(pState == walking) {
+    else if (pState == walking) {
         if (runAnimClock.getElapsedTime() >= sf::milliseconds(200)) {
             frame++;
             if (frame > 4) frame = 1;
             runAnimClock.restart();
         }
-        //shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+
         shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
-    } else if (pState == dead) {
+    }
+    else if (pState == dead) {
+        // Animation played on death
         if (runAnimClock.getElapsedTime() >= sf::milliseconds(300)) {
-            if(frame < 3) frame++;
+            if (frame < 3) frame++;
             runAnimClock.restart();
         }
-        //shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * 24, 0), sf::Vector2i(24, 24)));
         shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 24, 0), sf::Vector2i(24, 24)));
     }
 
@@ -197,7 +198,7 @@ void Player::animate()
 
 void Player::teleport(sf::Vector2f pos)
 {
-    //shape.setPosition(pos);
+    // Set position of player and hitbox
     shape->setPosition(pos);
     hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
 }

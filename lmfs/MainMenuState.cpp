@@ -1,28 +1,29 @@
 #include "MainMenuState.h"
 #include "GameState.h"
 
+// CO/DE -STRUCTORS
 MainMenuState::MainMenuState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, std::stack<State*>& states) : State(newWin, keyNew), states(states) {
+	// Initialization
 	initFonts();
 	initSounds();
 	startTimer = 0.25;
+
+	// Create menu manager and menu
 	manager = new MenuManager();
 	manager->menus.push(new Menu());
 	manager->menus.top()->addButton(Button({ 40, 120 }, { 200, 50 }, "New Game", 0, 0, font, hoverBuffer, clickBuffer));
 	manager->menus.top()->addButton(Button({ 40, 200 }, { 200, 50 }, "Load Game", 0, 1, font, hoverBuffer, clickBuffer));
 	manager->menus.top()->addButton(Button({ 40, 280 }, { 200, 50 }, "Quit", 1, 0, font, hoverBuffer, clickBuffer));
-	/*
-	menu = new Menu();
-	menu->addButton(Button({ 100, 100 }, { 200, 50 }, "New Game", 0, font, hoverBuffer, clickBuffer));
-	menu->addButton(Button({ 100, 170 }, { 200, 50 }, "Load Game", 1, font, hoverBuffer, clickBuffer));
-	menu->addButton(Button({ 100, 240 }, { 200, 50 }, "Quit", 2, font, hoverBuffer, clickBuffer));
-	*/
 
+	// Load background image
+	State::loadTextureImage(bgTexture, "menu_bg");
+	/*
 	std::string textureFilename = "menu_bg.png";
 
 	if (!bgTexture.loadFromFile("assets/" + textureFilename)) {
 		std::cerr << "Failed to load texture: " << textureFilename << std::endl;
 		return;
-	}
+	}*/
 
 	bgShape.setTexture(&bgTexture);
 	bgShape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(640, 512)));
@@ -34,6 +35,7 @@ MainMenuState::~MainMenuState()
 {
 }
 
+// INITIALIZATION
 void MainMenuState::initFonts()
 {
 	if (!this->font.openFromFile("assets/Retro_Gaming.ttf"))
@@ -58,6 +60,12 @@ void MainMenuState::initSounds()
 	music.play();
 }
 
+// Currently unused
+void MainMenuState::initKeys() {
+
+}
+
+// EXECUTED EVERY FRAME
 bool MainMenuState::update(const float& delTime)
 {
 	if (music.getStatus() != sf::SoundSource::Status::Playing) music.play();
@@ -78,29 +86,25 @@ bool MainMenuState::update(const float& delTime)
 		}
 	}
 	return false;
-	//menu->update(*window);
 }
 
 void MainMenuState::render(sf::RenderTarget* target)
 {
 	window->draw(bgShape);
 	manager->render(*window);
-	//menu->draw(*window);
 }
 
+// Currently unused
+void MainMenuState::inputUpdate(const float& delTime)
+{
+}
+
+// OTHER
 void MainMenuState::start()
 {
 	startTimer = 0.25;
 }
 
-void MainMenuState::inputUpdate(const float& delTime)
-{
-}
-
 void MainMenuState::endState()
 {
-}
-
-void MainMenuState::initKeys() {
-
 }

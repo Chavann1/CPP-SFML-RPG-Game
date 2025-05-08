@@ -1,13 +1,16 @@
 #pragma once
 #include "State.h"
 #include "Enemy.h"
+
 class EnemyManager
 {
 public:
-	EnemyManager(std::vector<sf::FloatRect*>& collisionRects);
+	// Variables
 	std::vector<Enemy*> enemies;
 	std::vector<sf::FloatRect*>& collisionRects;
 
+	// Methods
+	EnemyManager(std::vector<sf::FloatRect*>& collisionRects);
 	bool update(const float& delTime);
 	void render(sf::RenderWindow& window);
 };
