@@ -16,6 +16,8 @@
 #include <regex>
 #include <utility>
 #include <cstdlib>
+#include <cmath>
+#include <iterator>
 
 class State
 {

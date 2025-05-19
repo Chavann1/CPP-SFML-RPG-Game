@@ -2,6 +2,7 @@
 #include "Door.h"
 #include "EnemyManager.h"
 #include "Hud.h"
+#include "Sword.h"
 
 class Player {
 public:
@@ -14,8 +15,10 @@ public:
     sf::Clock runAnimClock;
     sf::Texture texture;
     sf::Texture dTexture;
+    sf::Texture aTexture;
     Hud* hud;
     EnemyManager* eManager;
+    Sword* sword;
     int frame;
     int dir;
     bool damageable;

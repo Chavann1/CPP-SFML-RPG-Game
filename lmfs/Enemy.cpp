@@ -13,20 +13,39 @@ Enemy::Enemy(const sf::Vector2f& pos, int type, int dropId, int dropCount, bool 
     runAnimClock.restart();
     dir = 0;
     frame = 0;
+
+    State::loadTextureImage(deathTexture, "enemy_death");
+    eState = walking;
+    damageable = true;
+}
+
+Enemy::~Enemy()
+{
+}
+
+void Enemy::dealDamage(float damage, float x, float y)
+{
+    if (damageable) {
+        hp -= damage;
+        damageClock.restart();
+        damageable = false;
+        shape.setFillColor(sf::Color::Black);
+        eState = stunned;
+
+        if (hp <= 0) {
+            shape.setFillColor(sf::Color::White);
+            eState = dead;
+            frame = 0;
+            shape.setTexture(&deathTexture);
+            shape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(34, 32)));
+        }
+    }
 }
 
 void Enemy::loadSprite()
 {
 
     State::loadTextureImage(texture, "enemy_" + std::to_string(type));
-    /*
-    std::string textureFilename = "enemy_" + std::to_string(type);
-
-    if (!texture.loadFromFile("assets/" + textureFilename + ".png")) {
-        std::cerr << "Failed to load texture: " << textureFilename << std::endl;
-        return;
-    }
-    */
 
     shape.setTexture(&texture);
     switch (type) {
@@ -50,77 +69,96 @@ void Enemy::loadSprite()
 
 void Enemy::movement(const float& delTime, std::vector<sf::FloatRect*> collisionRects)
 {
-    if (moveClock.getElapsedTime() >= sf::seconds(3) || stuck) {
-        walk = rand() % 3;
-        // 2 in 3 chance to move
-        if (walk != 2) {
-            // Get a random direction
-            move = randomDirection(dir);
+    if (eState != dead) {
+        if (damageClock.getElapsedTime() >= sf::milliseconds(500)) {
+            damageable = true;
+            shape.setFillColor(sf::Color::White);
+            eState = walking;
         }
-        moveClock.restart();
     }
-    if (walk != 2) {
-        // Test copy of the shape
-        sf::RectangleShape newS = shape;
-        newS.move(move * speed * delTime);
+    if (eState == walking) {
+        if (moveClock.getElapsedTime() >= sf::seconds(3) || stuck) {
+            walk = rand() % 3;
+            // 2 in 3 chance to move
+            if (walk != 2) {
+                // Get a random direction
+                move = randomDirection(dir);
+            }
+            moveClock.restart();
+        }
+        if (walk != 2) {
+            // Test copy of the shape
+            sf::RectangleShape newS = shape;
+            newS.move(move * speed * delTime);
 
-        sf::FloatRect oldRect = shape.getGlobalBounds();
-        float olLeft = oldRect.position.x;
-        float olRight = olLeft + oldRect.size.x;
-        float olUp = oldRect.position.y;
-        float olDown = olUp + oldRect.size.y;
+            sf::FloatRect oldRect = shape.getGlobalBounds();
+            float olLeft = oldRect.position.x;
+            float olRight = olLeft + oldRect.size.x;
+            float olUp = oldRect.position.y;
+            float olDown = olUp + oldRect.size.y;
 
-        sf::FloatRect rect = newS.getGlobalBounds();
-        float pLeft = rect.position.x;
-        float pRight = pLeft + rect.size.x;
-        float pUp = rect.position.y;
-        float pDown = pUp + rect.size.y;
+            sf::FloatRect rect = newS.getGlobalBounds();
+            float pLeft = rect.position.x;
+            float pRight = pLeft + rect.size.x;
+            float pUp = rect.position.y;
+            float pDown = pUp + rect.size.y;
 
-        // Check collision with walls
-        for (auto p : collisionRects) {
-            // Check if it's colliding at all
-            if (rect.findIntersection(*p)) {
-                sf::FloatRect wall = *p;
-                float wLeft = wall.position.x;
-                float wRight = wLeft + wall.size.x;
-                float wUp = wall.position.y;
-                float wDown = wUp + wall.size.y;
-                // Check if it's to the right
-                if (pLeft < wLeft && pRight < wRight && pUp < wDown && pDown > wUp) {
-                    move.x = 0.f;
-                    stuck = true;
-                }
-                // Check if it's to the left
-                if (pLeft > wLeft && pRight > wRight && pUp < wDown && pDown > wUp) {
-                    move.x = 0.f;
-                    stuck = true;
-                }
-                // Check if it's on the bottom
-                if (pUp < wUp && pDown < wDown && pLeft < wRight && pRight > wLeft) {
-                    move.y = 0.f;
-                    stuck = true;
-                }
-                // Check if it's on the top
-                if (pUp > wUp && pDown > wDown && pLeft < wRight && pRight > wLeft) {
-                    move.y = 0.f;
-                    stuck = true;
+            // Check collision with walls
+            for (auto p : collisionRects) {
+                // Check if it's colliding at all
+                if (rect.findIntersection(*p)) {
+                    sf::FloatRect wall = *p;
+                    float wLeft = wall.position.x;
+                    float wRight = wLeft + wall.size.x;
+                    float wUp = wall.position.y;
+                    float wDown = wUp + wall.size.y;
+                    // Check if it's to the right
+                    if (pLeft < wLeft && pRight < wRight && pUp < wDown && pDown > wUp) {
+                        move.x = 0.f;
+                        stuck = true;
+                    }
+                    // Check if it's to the left
+                    if (pLeft > wLeft && pRight > wRight && pUp < wDown && pDown > wUp) {
+                        move.x = 0.f;
+                        stuck = true;
+                    }
+                    // Check if it's on the bottom
+                    if (pUp < wUp && pDown < wDown && pLeft < wRight && pRight > wLeft) {
+                        move.y = 0.f;
+                        stuck = true;
+                    }
+                    // Check if it's on the top
+                    if (pUp > wUp && pDown > wDown && pLeft < wRight && pRight > wLeft) {
+                        move.y = 0.f;
+                        stuck = true;
+                    }
                 }
             }
+            if (move.x != 0 && move.y != 0) stuck = false;
+            shape.move(move * speed * delTime);
+            hitbox.setPosition(shape.getPosition() + sf::Vector2f(6.f, 12.f));
         }
-        if (move.x != 0 && move.y != 0) stuck = false;
-        shape.move(move * speed * delTime);
-        hitbox.setPosition(shape.getPosition() + sf::Vector2f(6.f, 12.f));
     }
 }
 
 void Enemy::animate()
 {
-    if (runAnimClock.getElapsedTime() >= sf::milliseconds(500)) {
-        frame++;
-        if (frame >= frameNum) frame = 0;
-        runAnimClock.restart();
+    if (eState == walking) {
+        if (runAnimClock.getElapsedTime() >= sf::milliseconds(500)) {
+            frame++;
+            if (frame >= frameNum) frame = 0;
+            runAnimClock.restart();
+        }
+        shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * w, dir * h), sf::Vector2i(w, h)));
     }
-    shape.setTextureRect(sf::IntRect(sf::Vector2i(frame * w, dir * h), sf::Vector2i(w, h)));
+    else if (eState == dead) {
+        if (runAnimClock.getElapsedTime() >= sf::milliseconds(250)) {
+            if (frame < 4) frame++;
+            else deathComplete = true;
+            runAnimClock.restart();
+        }
+        shape.setTextureRect(sf::IntRect(sf::Vector2i(frame*34, 0), sf::Vector2i(34, 32)));
+    }
 
 }
 

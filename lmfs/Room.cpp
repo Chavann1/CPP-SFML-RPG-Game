@@ -144,7 +144,7 @@ void Room::loadGraphics(const std::string& graphicsFile) {
                 if(p->open) p->shape.setTextureRect(sf::IntRect(sf::Vector2i(col2 * TILE_SIZE, row2 * TILE_SIZE), sf::Vector2i(TILE_SIZE, TILE_SIZE)));
                 else {
                     p->shape.setTextureRect(sf::IntRect(sf::Vector2i(col1 * TILE_SIZE, row1 * TILE_SIZE), sf::Vector2i(TILE_SIZE, TILE_SIZE)));
-                    p->secondaryShape.setTextureRect(sf::IntRect(sf::Vector2i(col2 * TILE_SIZE, row2 * TILE_SIZE), sf::Vector2i(TILE_SIZE, TILE_SIZE)));
+                    p->secondaryRect = sf::IntRect(sf::Vector2i(col2 * TILE_SIZE, row2 * TILE_SIZE), sf::Vector2i(TILE_SIZE, TILE_SIZE));
                 }
             }
         }
@@ -175,9 +175,10 @@ bool Room::update(const float& delTime)
 void Room::complete()
 {
     completed = true;
-    for (auto p : doors) {
+    for (auto& p : doors) {
         if (p->type == 0) {
             p->open = true;
+            p->shape.setTextureRect(p->secondaryRect);
         }
         else continue;
     }

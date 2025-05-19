@@ -134,8 +134,14 @@ void GameState::render(sf::RenderTarget* target)
 {
 
 	room->render(*window);
+	//window->draw((player->hitbox));
 	window->draw(*(player->shape));
 	player->animate();
+	// placeholder begin
+	if (player->sword != nullptr) {
+		window->draw(player->sword->szejp);
+	}
+	// placeholder end
 	if (gState == paused || gState == over) {
 		window->draw(pauseBg);
 	}

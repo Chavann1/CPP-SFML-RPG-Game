@@ -25,14 +25,7 @@ Player::Player(float x, float y, int h, float m, float max) {
     */
 
     State::loadTextureImage(dTexture, "player_death");
-    /*
-    textureFilename = "player_death.png";
-
-    if (!dTexture.loadFromFile("assets/" + textureFilename)) {
-        std::cerr << "Failed to load texture: " << textureFilename << std::endl;
-        return;
-    }
-    */
+    State::loadTextureImage(aTexture, "player_attack");
 
     // Create player sprite
     shape = new sf::Sprite(texture);
@@ -49,38 +42,52 @@ Player::Player(float x, float y, int h, float m, float max) {
 void Player::update()
 {
     if (pState == attacking) {
+        if (sword != nullptr) {
+            sword->update();
+        }
         if (attackClock.getElapsedTime() >= sf::milliseconds(400)) {
+            // Finish attack
+            // delete sword
+            delete sword;
+            sword = nullptr;
+            // reset player sprite
+            sf::Vector2f pos = shape->getPosition() + sf::Vector2f(20.f, 12.f);
+            shape->setTexture(texture);
+            shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 19, dir * 27), sf::Vector2i(19, 27)));
+            shape->setPosition(pos);
             pState = walking;
         }
     }
 
     // Check collisions with enemies
-    sf::FloatRect rect = shape->getGlobalBounds();
+    sf::FloatRect rect = hitbox.getGlobalBounds();
     sf::FloatRect eRect;
 
     if (damageable) {
         if (eManager != nullptr) {
             for (auto p : eManager->enemies) {
                 // Look for intersection with enemy
-                eRect = p->hitbox.getGlobalBounds();
-                if (rect.findIntersection(eRect)) {
-                    damageable = false;
-                    shape->setColor(sf::Color(255, 255, 255, 128));
-                    hurtSound->play();
-                    hp -= p->damage;
+                if (p->eState != dead) {
+                    eRect = p->hitbox.getGlobalBounds();
+                    if (rect.findIntersection(eRect)) {
+                        damageable = false;
+                        shape->setColor(sf::Color(255, 255, 255, 128));
+                        hurtSound->play();
+                        hp -= p->damage;
 
-                    // Update HUD
-                    hud->updateHp(hp, max_hp);
-                    if (hp <= 0) {
-                        // Initialize Game Over
-                        shape->setColor(sf::Color(255, 255, 255, 255));
-                        pState = dead;
-                        shape->setTexture(dTexture);
-                        shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
-                        runAnimClock.restart();
-                        frame = 0;
+                        // Update HUD
+                        hud->updateHp(hp, max_hp);
+                        if (hp <= 0) {
+                            // Initialize Game Over
+                            shape->setColor(sf::Color(255, 255, 255, 255));
+                            pState = dead;
+                            shape->setTexture(dTexture);
+                            shape->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(24, 24)));
+                            runAnimClock.restart();
+                            frame = 0;
+                        }
+                        damageClock.restart();
                     }
-                    damageClock.restart();
                 }
             }
         }
@@ -193,6 +200,15 @@ void Player::animate()
         }
         shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 24, 0), sf::Vector2i(24, 24)));
     }
+    else if (pState == attacking) {
+        // Animation played on death
+        if (runAnimClock.getElapsedTime() >= sf::milliseconds(75)) {
+            if (frame < 3) frame++;
+            runAnimClock.restart();
+        }
+        shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 40, dir*40), sf::Vector2i(40, 40)));
+    }
+
 
 }
 
@@ -205,7 +221,16 @@ void Player::teleport(sf::Vector2f pos)
 
 void Player::attack() {
     if (pState != dead && pState != attacking) {
+        // Change sprite
+        frame = 0;
+        shape->setTexture(aTexture);
+        shape->setTextureRect(sf::IntRect(sf::Vector2i(frame * 40, dir * 40), sf::Vector2i(40, 40)));
+        sf::Vector2f pos = shape->getPosition() - sf::Vector2f(20.f, 12.f);
+        shape->setPosition(pos);
+        
+        // Change state and create sword hitbox object
         pState = attacking;
+        sword = new Sword(eManager, hitbox.getPosition().x, hitbox.getPosition().y, dir, 1.f);
         attackClock.restart();
     }
 }

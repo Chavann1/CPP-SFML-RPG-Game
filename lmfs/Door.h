@@ -7,8 +7,8 @@ public:
     sf::Vector2f position;
     sf::Vector2f destinationPosition;
     sf::RectangleShape shape;
-    sf::RectangleShape secondaryShape;
     sf::FloatRect collisionBox;
+    sf::IntRect secondaryRect;
     int type, destinationRoomId;
     bool open = true;
 

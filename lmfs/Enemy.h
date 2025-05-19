@@ -18,6 +18,8 @@ public:
 	sf::RectangleShape hitbox;
 	sf::Clock damageClock;
 	float hp, speed, damage;
+	bool deathComplete = false;
+	bool damageable;
 	int type;
 	enum Enemy_State { walking, stunned, dead };
 	Enemy_State eState;
@@ -25,6 +27,7 @@ public:
 	// Methods
 	Enemy(const sf::Vector2f& pos, int type, int dropId, int dropCount, bool priority);
 	~Enemy();
+	void dealDamage(float damage, float x, float y);
 	void loadSprite();
 	void movement(const float& delTime, std::vector<sf::FloatRect*> collisionRects);
 	void animate();
