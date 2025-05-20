@@ -2,7 +2,7 @@
 
 // CO/DE -STRUCTORS
 Player::Player(float x, float y, int h, float m, float max) {
-    speed = 100.f;
+    speed = 120.f;
     hp = h;
     money = m;
     pState = idle;
@@ -15,14 +15,6 @@ Player::Player(float x, float y, int h, float m, float max) {
 
     // Load sprite
     State::loadTextureImage(texture, "player_run");
-    /*
-    std::string textureFilename = "player_run.png";
-
-    if (!texture.loadFromFile("assets/" + textureFilename)) {
-        std::cerr << "Failed to load texture: " << textureFilename << std::endl;
-        return;
-    }
-    */
 
     State::loadTextureImage(dTexture, "player_death");
     State::loadTextureImage(aTexture, "player_attack");
@@ -67,7 +59,7 @@ void Player::update()
         if (eManager != nullptr) {
             for (auto p : eManager->enemies) {
                 // Look for intersection with enemy
-                if (p->eState != dead) {
+                if (p->eState != Enemy::dead) {
                     eRect = p->hitbox.getGlobalBounds();
                     if (rect.findIntersection(eRect)) {
                         damageable = false;
@@ -175,6 +167,7 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
         // Apply  the movement
         shape->move(movement * speed * delTime);
         hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
+        if(eManager != nullptr) eManager->pPos = shape->getPosition();
     }
     return nullptr;
 }

@@ -14,3 +14,5 @@ lmfs/sfml-window-3.dll
 lmfs/sfml-window-d-3.dll
 x64/Debug/lmfs.exe
 x64/Release/lmfs.exe
+/x64
+/x64

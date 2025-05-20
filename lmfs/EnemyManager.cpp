@@ -1,6 +1,7 @@
 #include "EnemyManager.h"
 
 EnemyManager::EnemyManager(std::vector<sf::FloatRect*>& collisionRects) : collisionRects(collisionRects) {
+	pPos = sf::Vector2f(0.f, 0.f);
 }
 
 bool EnemyManager::update(const float& delTime)
@@ -14,7 +15,7 @@ bool EnemyManager::update(const float& delTime)
 				delete p;
 				it = enemies.erase(it);
 			} else {
-				p->movement(delTime, collisionRects);
+				p->movement(delTime, collisionRects, pPos);
 				p->animate();
 				++it;
 			}

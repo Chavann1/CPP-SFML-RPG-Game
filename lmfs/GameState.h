@@ -15,9 +15,11 @@ private:
 	Room* room;
 	Door* curDoor;
 	float pHp, pM;
-	int pX, pY;
+	//int pX, pY;
+	float pX, pY;
 	enum Game_State { active, paused, over };
 	Game_State gState;
+	int save;
 
 	// Methods
 	void initKeys();
@@ -55,9 +57,11 @@ public:
 	bool update(const float& delTime);
 
 	// Other
+	void clear();
 	void start();
 	void endState();
 	void loadSave(int save);
+	void saveSave(int save);
 	void loadRoom(int id, sf::Vector2f playerPos);
 };
 

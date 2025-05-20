@@ -1,7 +1,7 @@
 #include "GameState.h"
 
 // CO/DE -STRUCTORS
-GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, int save, std::stack<State*>& states) : State(newWin, keyNew), states(states)
+GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, int save, std::stack<State*>& states) : State(newWin, keyNew), states(states), save(save)
 {
 	// Initialization functions
 	initKeys();
@@ -40,6 +40,7 @@ GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNe
 	gameOverShape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(182, 37)));
 	gameOverShape.setSize(sf::Vector2f(364.f, 74.f));
 	gameOverShape.setPosition(sf::Vector2f(160.f, 50.f));
+	gState = active;
 }
 
 GameState::~GameState()
@@ -90,31 +91,75 @@ void GameState::initSounds()
 // FUNCTIONS EXECUTED EVERY FRAME
 bool GameState::update(const float& delTime)
 {
+	// If Game is not over keep playing music
 	if (gState != over) {
 		if (music.getStatus() != sf::SoundSource::Status::Playing) music.play();
 	}
 	if (gState == paused) {
+		// Manage returns from the pause menu
 		std::pair<int, int> data = manager->update(delTime, *window);
+
 		switch (data.first) {
+		// MENU
 		case 0:
 			return true;
 			break;
+		// SAVE
+		case 1:
+			saveSave(save);
+			break;
+		default:
+			break;
 		}
-	}
-	else if (gState == active) {
+	} else if (gState == active) {
 		player->update();
 		if (room->update(delTime)) {
 			completion[roomId] = true;
 		}
-	}
-	else {
+	} else  if (gState == over){
+		// Manage returns from game over menu
 		std::pair<int, int> data = manager->update(delTime, *window);
 		switch (data.first) {
+		// MENU
 		case 0:
+			// End Game, return to main menu
 			return true;
+			break;
+		// RESTART
+		case 1:
+			// Cleanup
+			delete player;
+			completion.clear();
+			while (!(manager->menus.empty())) {
+				delete manager->menus.top();
+				manager->menus.pop();
+			}
+
+			// Initialize music
+			if (!music.openFromFile("assets/level_1.wav")) std::cout << "Could not load level music";
+			music.setLooping(true);
+			music.play();
+
+			// Reload save
+			loadSave(save);
+
+			// Create Player
+			player = new Player(pX, pY, pHp, pM, 10.f);
+			player->hurtSound = new sf::Sound(hurtBuffer);
+
+			hud->updateHp(pHp, 10.f);
+
+			// Reload room
+			loadRoom(roomId, sf::Vector2f(pX, pY));
+			player->hud = hud;
+			gState = active;
+			break;
+		default:
 			break;
 		}
 	}
+
+	// If player death animation finished, initiate game over
 	if (player->pState == Player::dead && player->frame >= 3) {
 		if (gState != over) {
 			gState = over;
@@ -123,7 +168,7 @@ bool GameState::update(const float& delTime)
 			music.setLooping(true);
 			music.play();
 			manager->menus.push(new Menu());
-			manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Restart", 0, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Restart", 1, 0, font, hoverBuffer, clickBuffer));
 			manager->menus.top()->addButton(Button({ 220, 300 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
 		}
 	}
@@ -132,16 +177,17 @@ bool GameState::update(const float& delTime)
 
 void GameState::render(sf::RenderTarget* target)
 {
-
+	
 	room->render(*window);
+	// Debugging draws
 	//window->draw((player->hitbox));
+	if (player->sword != nullptr) {
+		//window->draw(player->sword->szejp);
+	}
+
 	window->draw(*(player->shape));
 	player->animate();
-	// placeholder begin
-	if (player->sword != nullptr) {
-		window->draw(player->sword->szejp);
-	}
-	// placeholder end
+
 	if (gState == paused || gState == over) {
 		window->draw(pauseBg);
 	}
@@ -149,7 +195,7 @@ void GameState::render(sf::RenderTarget* target)
 		window->draw(gameOverShape);
 	}
 	if (!manager->menus.empty()) manager->render(*window);
-	hud->draw(*window);
+	if(hud != nullptr) hud->draw(*window);
 }
 
 void GameState::inputUpdate(const float& delTime)
@@ -159,7 +205,7 @@ void GameState::inputUpdate(const float& delTime)
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
 				manager->menus.push(new Menu());
 				manager->menus.top()->addButton(Button({ 220, 100 }, { 200, 50 }, "Menu", 0, 0, font, hoverBuffer, clickBuffer));
-				manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Save", 0, 0, font, hoverBuffer, clickBuffer));
+				manager->menus.top()->addButton(Button({ 220, 200 }, { 200, 50 }, "Save", 1, 0, font, hoverBuffer, clickBuffer));
 
 				gState = paused;
 				start();
@@ -194,6 +240,7 @@ void GameState::inputUpdate(const float& delTime)
 			}
 		}
 		else if (gState == paused) {
+			// Clearing pause menu
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(curKeys["ESC"]))) {
 				while (!(manager->menus.empty())) {
 					delete manager->menus.top();
@@ -248,6 +295,42 @@ void GameState::loadSave(int save)
 		}
 	}
 	else std::cout << "Failed to open file " << name;
+	inFile.close();
+}
+
+void GameState::saveSave(int save)
+{
+	std::string name = "data/saves/save" + std::to_string(1) + ".txt";
+	std::ofstream outFile;
+	outFile.open(name, std::ofstream::out | std::ofstream::trunc);
+
+	if (outFile.is_open()) {
+		// room id, hp, money, x, y
+		outFile << roomId << std::endl;
+		outFile << player->hp << std::endl;
+		outFile << player->money << std::endl;
+		outFile << player->shape->getPosition().x << std::endl;
+		outFile << player->shape->getPosition().y << std::endl;
+
+		for (auto p : completion) {
+			if (p.second == true) {
+				outFile << p.first << std::endl;
+			}
+		}
+		outFile << "end";
+	}
+	else std::cout << "Failed to open file " << name;
+	outFile.close();
+}
+
+void GameState::clear()
+{
+	//delete player;
+	completion.clear();
+	while (!(manager->menus.empty())) {
+		delete manager->menus.top();
+		manager->menus.pop();
+	}
 }
 
 // TO BE REMOVED

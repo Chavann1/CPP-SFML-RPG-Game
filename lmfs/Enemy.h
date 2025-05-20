@@ -14,13 +14,15 @@ private:
 	bool stuck = false;
 public:
 	// Variables
-	sf::RectangleShape shape;
+	//sf::RectangleShape shape;
+	sf::Sprite shape;
 	sf::RectangleShape hitbox;
 	sf::Clock damageClock;
 	float hp, speed, damage;
 	bool deathComplete = false;
 	bool damageable;
 	int type;
+	int moveCounter;
 	enum Enemy_State { walking, stunned, dead };
 	Enemy_State eState;
 
@@ -29,8 +31,9 @@ public:
 	~Enemy();
 	void dealDamage(float damage, float x, float y);
 	void loadSprite();
-	void movement(const float& delTime, std::vector<sf::FloatRect*> collisionRects);
+	void movement(const float& delTime, std::vector<sf::FloatRect*> collisionRects, sf::Vector2f pPos);
 	void animate();
 	sf::Vector2f randomDirection(int& directionVar);
+	sf::Vector2f playerDirection(sf::Vector2f pPos);
 };
 

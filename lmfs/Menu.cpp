@@ -15,6 +15,8 @@ std::pair<int, int> Menu::update(sf::RenderWindow& window) {
             return button.onClick();
         }
     }
+
+    return std::pair<int, int>(-1, -1);
 }
 
 void Menu::draw(sf::RenderWindow& window) {

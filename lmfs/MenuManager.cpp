@@ -1,6 +1,6 @@
 #include "MenuManager.h"
 
-MenuManager::MenuManager(/*std::stack<State*>& states) : states(states)*/)
+MenuManager::MenuManager()
 {
 }
 

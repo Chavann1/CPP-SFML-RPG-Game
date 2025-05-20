@@ -17,13 +17,6 @@ MainMenuState::MainMenuState(sf::RenderWindow* newWin, std::map<std::string, int
 
 	// Load background image
 	State::loadTextureImage(bgTexture, "menu_bg");
-	/*
-	std::string textureFilename = "menu_bg.png";
-
-	if (!bgTexture.loadFromFile("assets/" + textureFilename)) {
-		std::cerr << "Failed to load texture: " << textureFilename << std::endl;
-		return;
-	}*/
 
 	bgShape.setTexture(&bgTexture);
 	bgShape.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(640, 512)));

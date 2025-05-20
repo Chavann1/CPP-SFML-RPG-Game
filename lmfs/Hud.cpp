@@ -1,6 +1,6 @@
 #include "Hud.h"
 
-Hud::Hud(float max_hp, float money, const sf::Font& font) {
+Hud::Hud(float max_hp, float money, const sf::Font& font): moneyNum(font, std::to_string(money).substr(0, 4), 16) {
 	std::string textureFilename = "hp_hud_empty.png";
 
 	if (!hpEmptyTexture.loadFromFile("assets/" + textureFilename)) {
@@ -40,6 +40,7 @@ Hud::Hud(float max_hp, float money, const sf::Font& font) {
 	moneyIcon.setTexture(&moneyTexture);
 	moneyIcon.setPosition(sf::Vector2f(18.f, 48.f));
 
+	/*
 	moneyNum = new sf::Text(font);
 	moneyNum->setString(std::to_string(money).substr(0, 4));
 	moneyNum->setCharacterSize(16);
@@ -48,6 +49,19 @@ Hud::Hud(float max_hp, float money, const sf::Font& font) {
 	moneyNum->setFillColor(sf::Color::White);
 	moneyNum->setOrigin(sf::Vector2f(0, 0));
 	moneyNum->setPosition(sf::Vector2f(48.f, 48.f));
+	*/
+	
+	moneyNum.setOutlineColor(sf::Color::Black);
+	moneyNum.setOutlineThickness(2);
+	moneyNum.setFillColor(sf::Color::White);
+	moneyNum.setOrigin(sf::Vector2f(0, 0));
+	moneyNum.setPosition(sf::Vector2f(48.f, 48.f));
+
+}
+
+Hud::~Hud()
+{
+	//delete moneyNum;
 }
 
 void Hud::draw(sf::RenderWindow& window)
@@ -56,7 +70,8 @@ void Hud::draw(sf::RenderWindow& window)
 		window.draw(p.first);
 	}
 	window.draw(moneyIcon);
-	window.draw(*moneyNum);
+	//window.draw(*moneyNum);
+	window.draw(moneyNum);
 }
 
 void Hud::updateHp(float hp, float max_hp)
