@@ -1,11 +1,12 @@
 #pragma once
 
 #include "State.h"
-#include "Player.h"
+//#include "Player.h"
 #include "Door.h"
 #include "Room.h"
 #include "Hud.h"
 #include "MenuManager.h"
+#include "Textbox.h"
 
 class GameState : public State
 {
@@ -14,12 +15,15 @@ private:
 	Player* player;
 	Room* room;
 	Door* curDoor;
+	Textbox* textbox;
 	float pHp, pM;
 	//int pX, pY;
 	float pX, pY;
-	enum Game_State { active, paused, over };
+	enum Game_State { active, paused, over, waiting };
 	Game_State gState;
 	int save;
+	bool darknessOn;
+	sf::Clock inDelay;
 
 	// Methods
 	void initKeys();
@@ -34,14 +38,17 @@ public:
 	MenuManager* manager;
 	Hud* hud;
 	std::map<int, bool> completion;
+	std::map<int, int> npcStates;
 	sf::Font font;
 	sf::SoundBuffer hoverBuffer, clickBuffer, hurtBuffer;
 	sf::Texture gameOverTexture;
 	sf::RectangleShape pauseBg;
+	sf::RenderTexture darkness;
 	sf::RectangleShape gameOverShape;
 	sf::Music music;
 	sf::Music gameOverMusic;
 	int roomId = 1;
+	int musicId;
 
 	// Co/De -structors
 	virtual ~GameState();
@@ -58,6 +65,7 @@ public:
 
 	// Other
 	void clear();
+	void playMusic();
 	void start();
 	void endState();
 	void loadSave(int save);

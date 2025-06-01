@@ -162,14 +162,18 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="Hud.cpp" />
+    <ClCompile Include="Interactable.cpp" />
     <ClCompile Include="lmfs.cpp" />
     <ClCompile Include="MainMenuState.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MenuManager.cpp" />
+    <ClCompile Include="NPC.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="Sword.cpp" />
+    <ClCompile Include="Textbox.cpp" />
+    <ClCompile Include="Touchable.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="assets\Retro_Gaming.ttf" />
@@ -182,13 +186,17 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="Hud.h" />
+    <ClInclude Include="Interactable.h" />
     <ClInclude Include="MainMenuState.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="MenuManager.h" />
+    <ClInclude Include="NPC.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="Sword.h" />
+    <ClInclude Include="Textbox.h" />
+    <ClInclude Include="Touchable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

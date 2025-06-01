@@ -3,12 +3,20 @@
 #include "Door.h"
 #include "Enemy.h"
 #include "EnemyManager.h"
+#include "Interactable.h"
+#include "NPC.h"
 
 class Room {
 public:
     // Variables
     std::vector<Door*> doors;
+    std::vector<Interactable*> interacts;
+    std::vector<std::pair<sf::CircleShape, sf::CircleShape>> lights;
+    sf::Clock lightClock;
+    bool darknessOn;
+    bool lightCycle;
     bool completed;
+    int musicId;
 
     // Methods
     Room(const std::string& layoutFile, const std::string& graphicsFile, bool completed);
@@ -18,6 +26,7 @@ public:
     void complete();
     const std::vector<sf::FloatRect*>& getCollisionRects() const;
     EnemyManager* getEManager();
+    void addLights(sf::RenderTexture& darkness);
 
 private:
     // Variables

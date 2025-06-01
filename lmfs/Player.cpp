@@ -30,6 +30,19 @@ Player::Player(float x, float y, int h, float m, float max) {
     hitbox.setOrigin(sf::Vector2f(0.f, 0.f));
     hitbox.setPosition(sf::Vector2f(x + 8, y + 16));
     hitbox.setSize(sf::Vector2f(24.f, 34.f));
+
+    // Set light circle properties
+    lightHole.setRadius(64.f);
+    lightHole.setFillColor(sf::Color(0, 0, 0, 0));
+    lightHole2.setRadius(80.f);
+    lightHole2.setFillColor(sf::Color(0, 0, 0, 24));
+}
+Player::~Player()
+{
+    //delete eManager;
+    //delete hud;
+    //delete shape;
+    //delete hurtSound;
 }
 void Player::update()
 {
@@ -167,6 +180,8 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
         // Apply  the movement
         shape->move(movement * speed * delTime);
         hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
+        lightHole.setPosition(hitbox.getPosition() - sf::Vector2f(50.f, 48.f));
+        lightHole2.setPosition(hitbox.getPosition()-sf::Vector2f(66.f, 64.f));
         if(eManager != nullptr) eManager->pPos = shape->getPosition();
     }
     return nullptr;
@@ -210,6 +225,8 @@ void Player::teleport(sf::Vector2f pos)
     // Set position of player and hitbox
     shape->setPosition(pos);
     hitbox.setPosition(shape->getPosition() + sf::Vector2f(8.f, 16.f));
+    lightHole.setPosition(hitbox.getPosition() - sf::Vector2f(82.f, 80.f));
+    lightHole2.setPosition(hitbox.getPosition() - sf::Vector2f(114.f, 112.f));
 }
 
 void Player::attack() {
@@ -226,4 +243,42 @@ void Player::attack() {
         sword = new Sword(eManager, hitbox.getPosition().x, hitbox.getPosition().y, dir, 1.f);
         attackClock.restart();
     }
+}
+
+bool Player::interactCheck(sf::FloatRect box)
+{
+    float x = 0;
+    float y = 0;
+    float wid = 1;
+    float hei = 1;
+    switch (dir) {
+    case 0:
+        x = shape->getPosition().x;
+        y = shape->getPosition().y + 24.f;
+        wid = 28.f;
+        hei = 32.f;
+        break;
+    case 1:
+        x = shape->getPosition().x + 24.f;
+        y = shape->getPosition().y;
+        wid = 32.f;
+        hei = 28.f;
+        break;
+    case 2:
+        x = shape->getPosition().x;
+        y = shape->getPosition().y - 32.f;
+        wid = 28.f;
+        hei = 32.f;
+        break;
+    case 3:
+        x = shape->getPosition().x - 32.f;
+        y = shape->getPosition().y;
+        wid = 32.f;
+        hei = 28.f;
+        break;
+    }
+
+    sf::FloatRect temp(sf::Vector2f(x, y), sf::Vector2f(wid, hei));
+    if (temp.findIntersection(box)) return true;
+    return false;
 }

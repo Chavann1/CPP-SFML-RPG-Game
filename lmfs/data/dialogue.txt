@@ -1,0 +1,19 @@
+0,0
+Welcome adventurer.
+I am a talking statue.
+
+0,1
+I don't have much else to say.
+
+1,0
+Be careful pal, that entrance does not look stable.
+If You walk through there and touch it by accident, I'm afraid it will collapse.
+You won't be able to get outta there anymore.
+
+2,0
+This scary dungeon appearing out of nowhere really has me stressed out.
+Whan can we possibly do about this?
+
+3,0
+That's it for now...
+Perhaps more will come in the future...

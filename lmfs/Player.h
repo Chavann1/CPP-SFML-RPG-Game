@@ -16,6 +16,8 @@ public:
     sf::Texture texture;
     sf::Texture dTexture;
     sf::Texture aTexture;
+    sf::CircleShape lightHole;
+    sf::CircleShape lightHole2;
     Hud* hud;
     EnemyManager* eManager;
     Sword* sword;
@@ -31,9 +33,11 @@ public:
 
     // Methods
     Player(float x, float y, int h, float m, float max);
+    ~Player();
     void update();
     void animate();
     void attack();
+    bool interactCheck(sf::FloatRect box);
     Door* movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors);
     void teleport(sf::Vector2f pos);
 };

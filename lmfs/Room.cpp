@@ -5,21 +5,28 @@ constexpr int ROOM_WIDTH = 20;
 constexpr int ROOM_HEIGHT = 16;
 
 Room::Room(const std::string& layoutFile, const std::string& graphicsFile, bool completed) : completed(completed) {
+    musicId = 1;
+    darknessOn = true;
     loadLayout(layoutFile, completed);
     loadGraphics(graphicsFile);
     srand(time(0));
+    bool clockCycle = true;
+    lightClock.restart();
 }
 
 Room::~Room()
 {
     // Clean up doors vector
-    for (auto p : doors) {
+    for (auto& p : doors) {
         delete p;
     }
+    doors.clear();
     // Clean up collisions
-    for (auto p : collisionRects) {
+    for (auto& p : collisionRects) {
         delete p;
     }
+    collisionRects.clear();
+
 }
 
 void Room::loadLayout(const std::string& layoutFile, bool completed) {
@@ -43,8 +50,12 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
         }
     }     
 
-    // Load doors
+    // Load doors and music
     while (std::getline(file, line)) {
+        if (line == "music") {
+            file >> musicId;
+            continue;
+        }
         if (line == "enemies") break;
         std::istringstream iss(line);
         float x, y, w, h, destX, destY;
@@ -60,7 +71,7 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
     if (!completed) {
         eManager = new EnemyManager(collisionRects);
         while (std::getline(file, line)) {
-            if (line == "end") break;
+            if (line == "npcs") break;
             std::istringstream iss(line);
             float x, y;
             int type, dropId, dropCount;
@@ -70,7 +81,28 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
             }
         }
     }
+    else {
+        while (std::getline(file, line)) {
+            if (line == "npcs") break;
+        }
+    }
     
+    // Load npcs
+    while (std::getline(file, line)) {
+        if (line == "end") break;
+        std::istringstream iss(line);
+        float x, y;
+        int type, id, sprite;
+        if (iss >> x >> y >> type >> id >> sprite) {
+            switch (type) {
+            case 0:
+                interacts.push_back(new Npc(sf::Vector2f(x, y), id, 0, sprite));
+                break;
+            }
+        }
+    }
+    
+    file.close();
 }
 
 void Room::loadGraphics(const std::string& graphicsFile) {
@@ -117,8 +149,9 @@ void Room::loadGraphics(const std::string& graphicsFile) {
         }
     }
     
-    // LOAD DOOR INFO
+    
     while (std::getline(file, line)) {
+        // LOAD DOOR INFO
         if (line == "doors") {
             std::string text1, text2;
             file >> text1 >> text2;
@@ -147,9 +180,34 @@ void Room::loadGraphics(const std::string& graphicsFile) {
                     p->secondaryRect = sf::IntRect(sf::Vector2i(col2 * TILE_SIZE, row2 * TILE_SIZE), sf::Vector2i(TILE_SIZE, TILE_SIZE));
                 }
             }
+            
+        }
+        // LOAD LIGHTS
+        std::istringstream ss(line);
+        int x, y, strength;
+        if (line == "lights") {
+            int dark;
+            file >> dark;
+            if (dark == 0) darknessOn = false;
+            continue;
+        }
+        if (line == "end") break;
+        if (ss >> x >> y >> strength) {
+            sf::CircleShape temp1(strength);
+            temp1.setFillColor(sf::Color(50, 20, 0, 8));
+            temp1.setPosition(sf::Vector2f(x - (strength * 3/4), y - (strength * 3 / 4)));
+            temp1.setOrigin(sf::Vector2f(0.f, 0.f));
+            sf::CircleShape temp2(strength+48);
+            temp2.setFillColor(sf::Color(50, 20, 0, 24));
+            temp2.setPosition(sf::Vector2f(x-48 - (strength* 3 / 4), y - 48 - (strength * 3 / 4)));
+            temp2.setOrigin(sf::Vector2f(0.f, 0.f));
+            lights.push_back(std::make_pair(temp1, temp2));
         }
     }
+
     
+    
+    file.close();
 }
 
 void Room::render(sf::RenderWindow& window) const {
@@ -159,11 +217,37 @@ void Room::render(sf::RenderWindow& window) const {
     for (const auto& door : doors) {
         window.draw(door->shape);
     }
+    for (const auto& interact : interacts) {
+        window.draw(interact->shape);
+    }
     if (eManager != nullptr) eManager->render(window);
+}
+
+void Room::addLights(sf::RenderTexture& darkness) {
+    for (auto &p : lights) {
+        darkness.draw(p.second, sf::BlendNone);
+        darkness.draw(p.first, sf::BlendNone);
+    }
 }
 
 bool Room::update(const float& delTime)
 {
+    // Update lights
+    if (lightClock.getElapsedTime() >= sf::seconds(1)) {
+        lightCycle = !lightCycle;
+        lightClock.restart();
+    }
+    for (auto& p : lights) {
+        if (lightCycle) {
+            p.first.setFillColor(sf::Color(50, 20, 0, 8 + (lightClock.getElapsedTime().asMilliseconds() / 50)));
+            p.second.setFillColor(sf::Color(50, 20, 0, 24 + (lightClock.getElapsedTime().asMilliseconds() / 50)));
+        }
+        else {
+            p.first.setFillColor(sf::Color(50, 20, 0, 8 + ((1000-lightClock.getElapsedTime().asMilliseconds()) / 50)));
+            p.second.setFillColor(sf::Color(50, 20, 0, 24 + ((1000-lightClock.getElapsedTime().asMilliseconds()) / 50)));
+        }
+    }
+    // Update enemy manager
     if (eManager != nullptr) {
         if (eManager->update(delTime)) {
             complete();
