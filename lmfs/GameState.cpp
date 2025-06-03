@@ -12,6 +12,7 @@ GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNe
 	// Create Player
 	player = new Player(pX, pY, pHp, pM, 10.f);
 	player->hurtSound = new sf::Sound(hurtBuffer);
+	player->hurtSound->setVolume(State::volume);
 
 	loadRoom(roomId, sf::Vector2f(pX, pY));
 	darknessOn = room->darknessOn;
@@ -34,7 +35,19 @@ GameState::GameState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNe
 	pauseBg.setPosition(sf::Vector2f(0, 0));
 
 	// Other
+	/*
 	textbox = new Textbox(font, sf::Vector2f(wid, hei / 3), sf::Vector2f(0.f, hei*2/3));
+	*/
+	sf::View view = window->getView();
+	sf::Vector2f viewSize = view.getSize();
+	sf::Vector2f viewCenter = view.getCenter();
+
+	float textboxHeight = viewSize.y / 3.f;
+	sf::Vector2f boxSize(viewSize.x, textboxHeight);
+	sf::Vector2f boxPosition(viewCenter.x - viewSize.x / 2.f,viewCenter.y + viewSize.y / 2.f - textboxHeight);
+
+	textbox = new Textbox(font, boxSize, boxPosition);
+
 	darkness.resize(window->getSize());
 	darkness.clear(sf::Color(0, 0, 0, 128));
 
@@ -157,6 +170,7 @@ bool GameState::update(const float& delTime)
 			// Create Player
 			player = new Player(pX, pY, pHp, pM, 10.f);
 			player->hurtSound = new sf::Sound(hurtBuffer);
+			player->hurtSound->setVolume(State::volume);
 
 			hud->updateHp(pHp, 10.f);
 
@@ -398,6 +412,7 @@ void GameState::playMusic()
 		break;
 	}
 	music.setLooping(true);
+	music.setVolume(State::volume);
 	music.play();
 }
 

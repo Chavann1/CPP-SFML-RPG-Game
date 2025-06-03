@@ -1,6 +1,9 @@
 #include "State.h"
 #include "GameState.h"
 
+unsigned int State::framerate = 60;
+int State::volume = 100;
+
 State::State(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew)
 {
     window = newWin;

@@ -44,5 +44,9 @@ public:
 	// Static functions
 	static void loadTextureImage(sf::Texture& texture, std::string filename);
 
+	// Static variables
+	static unsigned int framerate;
+	static int volume;
+
 };
 

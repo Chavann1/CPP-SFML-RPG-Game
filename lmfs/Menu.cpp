@@ -5,7 +5,9 @@ void Menu::addButton(const Button& button) {
 }
 
 std::pair<int, int> Menu::update(sf::RenderWindow& window) {
-    sf::Vector2f mousePos = (sf::Vector2f)sf::Mouse::getPosition(window);
+    //sf::Vector2f mousePos = (sf::Vector2f)sf::Mouse::getPosition(window);
+    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+    sf::Vector2f mousePos = window.mapPixelToCoords(pixelPos);
 
     for (auto& button : buttons) {
         bool hovering = button.contains(mousePos);

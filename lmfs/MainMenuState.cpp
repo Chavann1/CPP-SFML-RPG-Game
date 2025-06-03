@@ -1,5 +1,5 @@
 #include "MainMenuState.h"
-#include "GameState.h"
+
 
 // CO/DE -STRUCTORS
 MainMenuState::MainMenuState(sf::RenderWindow* newWin, std::map<std::string, int>* keyNew, std::stack<State*>& states) : State(newWin, keyNew), states(states) {
@@ -13,7 +13,8 @@ MainMenuState::MainMenuState(sf::RenderWindow* newWin, std::map<std::string, int
 	manager->menus.push(new Menu());
 	manager->menus.top()->addButton(Button({ 40, 120 }, { 200, 50 }, "New Game", 0, 0, font, hoverBuffer, clickBuffer));
 	manager->menus.top()->addButton(Button({ 40, 200 }, { 200, 50 }, "Load Game", 0, 1, font, hoverBuffer, clickBuffer));
-	manager->menus.top()->addButton(Button({ 40, 280 }, { 200, 50 }, "Quit", 1, 0, font, hoverBuffer, clickBuffer));
+	manager->menus.top()->addButton(Button({ 40, 280 }, { 200, 50 }, "Options", 2, 0, font, hoverBuffer, clickBuffer));
+	manager->menus.top()->addButton(Button({ 40, 360 }, { 200, 50 }, "Quit", 1, 0, font, hoverBuffer, clickBuffer));
 
 	// Load background image
 	State::loadTextureImage(bgTexture, "menu_bg");
@@ -76,6 +77,45 @@ bool MainMenuState::update(const float& delTime)
 		case 1:
 			music.stop();
 			return true;
+			break;
+		case 2:
+			manager->menus.push(new Menu());
+			manager->menus.top()->addButton(Button({ 13, 120 }, { 200, 50 }, "Reset Window", 3, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 226, 120 }, { 200, 50 }, "Volume Up", 4, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 226, 200 }, { 200, 50 }, "Volume Down", 5, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 439, 120 }, { 200, 50 }, "FPS Up", 6, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 439, 200 }, { 200, 50 }, "FPS Down", 7, 0, font, hoverBuffer, clickBuffer));
+			manager->menus.top()->addButton(Button({ 220, 280 }, { 200, 50 }, "Back", 9, 0, font, hoverBuffer, clickBuffer));
+			break;
+		case 3:
+			window->setSize(sf::Vector2u(640, 512));
+			break;
+		case 4:
+			if (State::volume < 100) State::volume += 5;
+			music.setVolume(State::volume);
+			startTimer = 0.1;
+			break;
+		case 5:
+			if (State::volume > 0) State::volume -= 5;
+			music.setVolume(State::volume);
+			startTimer = 0.1;
+			break;
+		case 6:
+			if (State::framerate < 240) State::framerate += 5;
+			window->setFramerateLimit(State::framerate);
+			std::cout << "fps: " << State::framerate << "\t";
+			startTimer = 0.1;
+			break;
+		case 7:
+			if (State::framerate > 10) State::framerate -= 5;
+			window->setFramerateLimit(State::framerate);
+			std::cout << "fps: " << State::framerate << "\t";
+			startTimer = 0.1;
+			break;
+		case 9:
+			delete manager->menus.top();
+			manager->menus.pop();
+			startTimer = 0.25;
 		}
 	}
 	return false;

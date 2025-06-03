@@ -19,6 +19,38 @@ Game::~Game()
     }
 }
 
+void Game::windowResize()
+{
+    const int windowW = window->getSize().x;
+    const int windowH = window->getSize().y;
+
+    const int viewW = 640;
+    const int viewH = 512;
+
+    // Compute scale factor (largest integer scale that fits)
+    float scaleX = static_cast<float>(windowW) / viewW;
+    float scaleY = static_cast<float>(windowH) / viewH;
+    float rawScale = std::min(scaleX, scaleY);
+
+    // Round down to nearest 0.25
+    float scale = std::floor(rawScale * 2.f) / 2.f;
+    if (scale < 1.0f) scale = 1.0f;
+
+    // Compute scaled size
+    int scaledW = viewW * scale;
+    int scaledH = viewH * scale;
+
+    // Compute black bar sizes (for letterboxing)
+    float viewportX = (windowW - scaledW) / 2.f / windowW;
+    float viewportY = (windowH - scaledH) / 2.f / windowH;
+    float viewportW = static_cast<float>(scaledW) / windowW;
+    float viewportH = static_cast<float>(scaledH) / windowH;
+
+    // Set the view to maintain aspect ratio
+    mainView->setViewport(sf::FloatRect(sf::Vector2f(viewportX, viewportY), sf::Vector2f(viewportW, viewportH)));
+    window->setView(*mainView);
+}
+
 // WINDOW INITIALIZATION
 void Game::initWindow()
 {
@@ -44,24 +76,24 @@ void Game::initWindow()
     std::string line = "default";
     unsigned int width = 640;
     unsigned int height = 512;
-    unsigned int framerate = 60;
 
     // Reading
     getline(setFile, line);
-    setFile >> width >> height >> framerate;
+    setFile >> width >> height >> State::framerate;
 
     setFile.close();
 
-    float w, h;
-    w = width;
-    h = height;
+
+    //float w, h;
+    //w = width;
+    //h = height;
 
     // Creating view and window
-    mainView = new sf::View(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(w, h)));
+    mainView = new sf::View(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(640, 512)));
     window = new sf::RenderWindow(sf::VideoMode({ width, height }), line);
     window->setView(*mainView);
-    window->setFramerateLimit(framerate);
-    window->setFramerateLimit(60);
+    window->setFramerateLimit(State::framerate);
+    windowResize();
 
     // Window icon
     sf::Image icon;
@@ -162,11 +194,14 @@ void Game::close() {
 void Game::eventUpdate()
 {
     // MAIN LOOP
-    while (const std::optional event = window->pollEvent())
+    while (const std::optional wEvent = window->pollEvent())
     {
         // Closing window
-        if (event->is<sf::Event::Closed>()) {
+        if (wEvent->is<sf::Event::Closed>()) {
             popState();
+        }
+        if (wEvent->is<sf::Event::Resized>()) {
+            windowResize();
         }
 
     }

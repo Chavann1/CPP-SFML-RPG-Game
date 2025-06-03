@@ -25,6 +25,7 @@ private:
 public:
 	Game();
 	virtual ~Game();
+	void windowResize();
 	void update();
 	void run();
 	void render();

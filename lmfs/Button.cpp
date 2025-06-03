@@ -19,6 +19,7 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, const std
 
 void Button::setHovered(bool hovered) {
     if (hovered && !wasHovered) {
+        hoverSound->setVolume(State::volume);
         hoverSound->play();
     }
     wasHovered = hovered;
@@ -37,7 +38,10 @@ bool Button::contains(sf::Vector2f point) const {
 }
 
 std::pair<int, int> Button::onClick() {
-    if(clickSound->getStatus() != sf::SoundSource::Status::Playing) clickSound->play();
+    if (clickSound->getStatus() != sf::SoundSource::Status::Playing) {
+        clickSound->setVolume(State::volume);
+        clickSound->play();
+    }
 
     return std::pair<int, int>(bType, bData);
 }
