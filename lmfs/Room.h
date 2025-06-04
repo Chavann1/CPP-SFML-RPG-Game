@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "EnemyManager.h"
 #include "Interactable.h"
+#include "Touchable.h"
 #include "NPC.h"
 
 class Room {
@@ -11,6 +12,7 @@ public:
     // Variables
     std::vector<Door*> doors;
     std::vector<Interactable*> interacts;
+    std::vector<Touchable*> touchables;
     std::vector<std::pair<sf::CircleShape, sf::CircleShape>> lights;
     sf::Clock lightClock;
     bool darknessOn;

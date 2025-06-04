@@ -4,10 +4,11 @@
 class Touchable
 {
 public: 
-	int type;
-	float value;
+	int type, value;
+	bool forDeletion;
+	sf::Texture texture;
 	sf::RectangleShape shape;
-	Touchable();
+	Touchable(int type, int value, sf::Vector2f pos);
 	~Touchable();
 };
 

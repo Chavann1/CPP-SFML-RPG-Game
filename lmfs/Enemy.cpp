@@ -1,7 +1,7 @@
 #include "Enemy.h"
 
 // CO/DE -STRUCTORS
-Enemy::Enemy(const sf::Vector2f& pos, int type, int dropId, int dropCount, bool priority) : type(type), shape(texture) {
+Enemy::Enemy(const sf::Vector2f& pos, int type, unsigned int dropId, unsigned int dropCount, bool priority) : type(type), shape(texture), dropId(dropId), dropCount(dropCount) {
     // Initialize the enemy
     shape.setPosition(pos);
     shape.setOrigin(sf::Vector2f(0.f, 0.f));
@@ -101,7 +101,9 @@ void Enemy::movement(const float& delTime, std::vector<sf::FloatRect*> collision
     }
     if (eState == walking) {
         if (moveClock.getElapsedTime() >= sf::seconds(moveCounter) || stuck) {
-            walk = rand() % 3;
+
+            //walk = rand() % 3;
+            walk = getRand3();
             // 2 in 3 chance to move
             if (walk != 2) {
                 switch (type) {
@@ -206,12 +208,21 @@ sf::Vector2f Enemy::playerDirection(sf::Vector2f pPos) {
     return sf::Vector2f(nx, ny);
 }
 
+int Enemy::getRand3()
+{
+    static thread_local std::mt19937 rng(std::random_device{}());
+    static thread_local std::uniform_int_distribution<int> dist(0, 2);
+    return dist(rng);
+}
+
 sf::Vector2f Enemy::randomDirection(int& directionVar) {
     // Get random direction
     float x;
     float y;
-    int dir_x = rand() % 3;
-    int dir_y = rand() % 3;
+    //int dir_x = rand() % 3;
+    //int dir_y = rand() % 3;
+    int dir_x = getRand3();
+    int dir_y = getRand3();
 
     switch (dir_x) {
     case 0:

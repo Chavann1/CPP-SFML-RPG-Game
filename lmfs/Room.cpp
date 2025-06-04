@@ -26,7 +26,11 @@ Room::~Room()
         delete p;
     }
     collisionRects.clear();
-
+    // Clean up touchable objects
+    for (const auto& p: touchables) {
+        delete p;
+    }
+    touchables.clear();
 }
 
 void Room::loadLayout(const std::string& layoutFile, bool completed) {
@@ -69,7 +73,7 @@ void Room::loadLayout(const std::string& layoutFile, bool completed) {
 
     // Load enemies
     if (!completed) {
-        eManager = new EnemyManager(collisionRects);
+        eManager = new EnemyManager(collisionRects, touchables);
         while (std::getline(file, line)) {
             if (line == "npcs") break;
             std::istringstream iss(line);
@@ -220,6 +224,9 @@ void Room::render(sf::RenderWindow& window) const {
     for (const auto& interact : interacts) {
         window.draw(interact->shape);
     }
+    for (const auto& pickup : touchables) {
+        window.draw(pickup->shape);
+    }
     if (eManager != nullptr) eManager->render(window);
 }
 
@@ -253,6 +260,19 @@ bool Room::update(const float& delTime)
             complete();
         }
     }
+
+    // Cleanup touchable objects
+    for (auto it = touchables.begin(); it != touchables.end(); ) {
+        Touchable* p = *it;
+        if (p->forDeletion) {
+            delete p;
+            it = touchables.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
     return completed;
 }
 

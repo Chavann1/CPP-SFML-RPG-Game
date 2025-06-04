@@ -88,4 +88,5 @@ void Hud::updateHp(float hp, float max_hp)
 
 void Hud::updateMoney(float money)
 {
+	moneyNum.setString(std::to_string(money).substr(0, 4));
 }

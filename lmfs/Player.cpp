@@ -107,7 +107,7 @@ void Player::update()
         }
     }
 }
-Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors) {
+Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> &doors, std::vector<Touchable*>& touchables) {
     // Adjust movement for diagonal directions
     if (movement.x != 0 && movement.y != 0) {
         movement *= 0.7071f;
@@ -166,6 +166,33 @@ Door* Player::movement(sf::Vector2f movement, const float& delTime, std::vector<
             }
         }
         else continue;
+    }
+
+    // Check collision with touchable objects
+    for (auto &p : touchables) {
+        if (rect.findIntersection(p->shape.getGlobalBounds())) {
+            switch (p->type) {
+            case 0:
+                // Update hp
+                hp += p->value;
+                if (hp > max_hp) hp = max_hp;
+                // UPDATE HUD
+                hud->updateHp(hp, max_hp);
+
+                // Mark for deletion
+                p->forDeletion = true;
+                break;
+            case 1:
+                // Update money
+                money += p->value;
+                // UPDATE HUD
+                hud->updateMoney(money);
+
+                // Mark for deletion
+                p->forDeletion = true;
+                break;
+            }
+        }
     }
 
     // Change states for animation purposes

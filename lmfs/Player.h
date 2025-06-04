@@ -38,6 +38,6 @@ public:
     void animate();
     void attack();
     bool interactCheck(sf::FloatRect box);
-    Door* movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> doors);
+    Door* movement(sf::Vector2f movement, const float& delTime, std::vector<sf::FloatRect*> collisionRects, std::vector<Door*> &doors, std::vector<Touchable*> &touchables);
     void teleport(sf::Vector2f pos);
 };

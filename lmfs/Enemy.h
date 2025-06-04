@@ -22,12 +22,13 @@ public:
 	bool deathComplete = false;
 	bool damageable;
 	int type;
+	unsigned int dropId, dropCount;
 	int moveCounter;
 	enum Enemy_State { walking, stunned, dead };
 	Enemy_State eState;
 
 	// Methods
-	Enemy(const sf::Vector2f& pos, int type, int dropId, int dropCount, bool priority);
+	Enemy(const sf::Vector2f& pos, int type, unsigned int dropId, unsigned int dropCount, bool priority);
 	~Enemy();
 	void dealDamage(float damage, float x, float y);
 	void loadSprite();
@@ -35,5 +36,6 @@ public:
 	void animate();
 	sf::Vector2f randomDirection(int& directionVar);
 	sf::Vector2f playerDirection(sf::Vector2f pPos);
+	int getRand3();
 };
 

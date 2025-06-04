@@ -271,7 +271,7 @@ void GameState::inputUpdate(const float& delTime)
 					vec.x = 1;
 					player->dir = 1;
 				}
-				curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors);
+				curDoor = player->movement(vec, delTime, room->getCollisionRects(), room->doors, room->touchables);
 				if (curDoor != nullptr) {
 					loadRoom(curDoor->destinationRoomId, curDoor->destinationPosition);
 					darknessOn = room->darknessOn;

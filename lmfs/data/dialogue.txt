@@ -15,5 +15,14 @@ This scary dungeon appearing out of nowhere really has me stressed out.
 Whan can we possibly do about this?
 
 3,0
-That's it for now...
-Perhaps more will come in the future...
+Hi, I'm looking for mushrooms.
+Yeah, yeah I know about the whole ancient evil dungeon thing.
+But I still got to eat dinner, don't I?
+
+4,0
+Not much to find here, just the old stone me...
+You need to go another way.
+
+5,0
+Congratulations, you've escaped.
+(This is the end of the demo.)
